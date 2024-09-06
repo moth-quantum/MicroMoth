@@ -193,12 +193,13 @@ def simulate(qc,shots=1024,get='counts',noise_model=[]):
         for i1 in range(2**(h-l-1)):
           for i2 in range(2**(qc.num_qubits-h-1)):
             b00=i0+2**(l+1)*i1+2**(h+1)*i2 # Index for the bit string where digits `s` and `t` are both `0``.
-            b01=b00+2**s # As above but the bits for `s` and `t` are `0` and `1`.
-            b10=b00+2**t # As above but the bits for `t` and `s` are `1` and `0`.
+            b01=b00+2**t # As above but the bits for `s` and `t` are `0` and `1`.
+            b10=b00+2**s # As above but the bits for `t` and `s` are `1` and `0`.
+            b11=b10+2**t # As above but the bits for `t` and `s` are `1` and `1`.
             if gate[0]=='cx':
-                k[b0],k[b1]=k[b10],k[11] # Flip the values.
+                k[b10],k[b11]=k[b11],k[b10] # Flip the values.
             elif gate[0]=='crx':
-                k[b0],k[b1]=turn(k[b10],k[b11],theta) # Perform the rotation.
+                k[b10],k[b11]=turn(k[b10],k[b11],theta) # Perform the rotation.
             elif gate[0]=='swap':
                 k[b01],k[b10]=k[b10],k[b01] # Flip the values.
   
