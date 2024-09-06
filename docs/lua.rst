@@ -1,9 +1,7 @@
 MicroQiskit Library Reference
 *****************************
 
-A version of Qiskit made for educational purposes.
-See https://qiskit.org for more on Qiskit.
-
+A minimal quantum SDK for Lua.
 
 .. function:: simulate(qc,get,counts):
 
@@ -68,6 +66,21 @@ See https://qiskit.org for more on Qiskit.
     .. classmethod:: cx(control,target)
     
         Adds a ``cx`` gate to the circuit for the given control and target qubits.
+
+    .. classmethod:: crx(control,target)
+    
+        Adds a ``crx`` gate to the circuit for the given control and target qubits.
+        The angle is given by ``theta``.
+
+    .. classmethod:: swap(control,target)
+    
+        Adds a ``swap`` gate to the circuit for the given pair of qubits.
+
+    .. classmethod:: partialswap(control,target)
+    
+        Adds a partial swap gate to the circuit for the given pair of qubits.
+        This is parameterized bz the angle ``theta``, giving a full swap when
+        ``theta`` is ``pi``.
     
     .. classmethod:: measure(qubit,bit)
     

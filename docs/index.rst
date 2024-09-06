@@ -1,9 +1,9 @@
-MicroQiskit Library Reference
+MicroMoth Library Reference
 *****************************
 
-Qiskit is a framework for quantum computation. The full version of is implemented in Python 3. See https://qiskit.org for more details.
+This documentation is for MicroMoth, a minimal quantum compting SDK suitable for porting to other programming languages. 
 
-This documentation is for MicroQiskit, a minimal reimplementation of Qiskit suitable for porting to other programming languages. It is intended for educational and testing purposes.
+MicroMoth is maintained by [Moth Quantum](https://mothquantum.com/). It is a fork and continuation of [MicroQiskit](https://microqiskit.readthedocs.io/en/latest/#).
 
 
 * :doc:`MicroPython/Python 2 <../micropython>` 

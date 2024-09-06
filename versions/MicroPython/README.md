@@ -1,6 +1,6 @@
 # MicroMoth for Python
 
-This version of MicroMoth is compatible with MicroPython, CircuitPython and Python 2.
+This version of MicroMoth is compatible with MicroPython, CircuitPython, Python 2 and Python 3.
 
 The [micromoth.py](micromoth.py) file found here is the same as that in the top-level folder, but with comments and blank lines removed. This is to reduce the file size, in order to better fit on a microcontroller.
 
