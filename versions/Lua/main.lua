@@ -1,13 +1,9 @@
--- This code is part of Qiskit.
+-- Copyright Moth Quantum 2024
 --
 -- Copyright IBM 2020
 
-print("\n===================================================================================")
-print("This is MicroQiskitLua: an extremely minimal version of Qiskit, implemented in Lua.")
-print("\nFor the standard version of Qiskit, see qiskit.org. To run your quantum programs\non real quantum hardware, see quantum-computing.ibm.com.")
-print("===================================================================================\n")
 
-dofile("MicroQiskit.lua")
+dofile("MicroMoth.lua")
 
 print("\nWe start with a Bell pair: the standard 'Hello World' of quantum computing.\nSee the source code for the circuit.")
 

@@ -6,7 +6,7 @@ For this reason we present MicroMoth: the smallest and most feature-poor framewo
 
 MicroMoth is a fork of [MicroQiskit](https://github.com/qiskit-community/MicroQiskit), which was initially conceived as a version of the [Qiskit](https://www.ibm.com/quantum/qiskit) SDK that could run on microcontroller devices. The strict need for simplicity and a lack of complex dependencies was the main guidance for the design. MicroMoth has some additional features in comparison with the original MicroQiskit. In particular, `swap`and `partialswap` gates.
 
-MicroMoth also contains ports for other languages, so you can bring the world of quantum into your familiar workflows. If you don't see your favourite language, note that it might be available for [MicroQiskit](https://github.com/qiskit-community/MicroQiskit) instead since we haven't finished upgrading all the ports.
+MicroMoth also contains ports for other languages, so you can bring the world of quantum into your familiar workflows. If you don't see your favourite language, note that it might be available for [MicroQiskit](https://github.com/moth-quantum/MicroMoth/versions/update_required) instead since we haven't finished upgrading all the ports.
 
 
 ### Documentation

@@ -62,6 +62,10 @@ A minimal quantum SDK for Python. It is compatible with Python 2 and Python 3, a
     .. classmethod:: h(qubit)
     
         Adds an ``h`` gate to the circuit on the given qubit.
+
+    .. classmethod:: t(qubit)
+    
+        Adds aa ``t`` gate to the circuit on the given qubit.
     
     .. classmethod:: cx(control,target)
     
@@ -75,12 +79,6 @@ A minimal quantum SDK for Python. It is compatible with Python 2 and Python 3, a
     .. classmethod:: swap(control,target)
     
         Adds a ``swap`` gate to the circuit for the given pair of qubits.
-
-    .. classmethod:: partialswap(control,target)
-    
-        Adds a partial swap gate to the circuit for the given pair of qubits.
-        This is parameterized bz the angle ``theta``, giving a full swap when
-        ``theta`` is ``pi``.
     
     .. classmethod:: measure(qubit,bit)
     

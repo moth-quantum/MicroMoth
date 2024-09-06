@@ -1,4 +1,4 @@
--- This code is part of Qiskit.
+-- Copyright Moth Quantum 2024
 --
 -- Copyright IBM 2020
 
@@ -75,6 +75,25 @@ function QuantumCircuit ()
   function qc.y (q)
     qc.z(q)
     qc.x(q)
+  end
+
+  function qc.t (q)
+    qc.rz(math.pi/4,q)
+  end
+
+  function qc.crx (theta,s,t)
+    qc.rx(theta/2,t)
+    qc.h(t)
+    qc.cx(s,t)
+    qc.rz(-theta/2,t)
+    qc.cx(s,t)
+    qc.h(t)
+  end
+
+  function qc.swap (s,t)
+    qc.cx(s,t)
+    qc.cx(t,s)
+    qc.cx(s,t)
   end
 
   return qc

@@ -13,4 +13,3 @@ An example of MicroQiskit Lua in use can be seen in [main.lua](main.lua).
 ### Documentation
 
 * [Documentation for MicroQiskit](https://microqiskit.readthedocs.io/en/latest/lua.html)
-* [Documentation for Qiskit](https://qiskit.org/documentation/)
