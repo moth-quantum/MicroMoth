@@ -1,4 +1,4 @@
-# MicroQiskit
+# MicroMoth
 
 There are many well-developed and feature-rich frameworks for quantum computing. These allow quantum programs to be created and then run on either advanced simulators or real prototype quantum devices. Though its obviously a good thing to have many features and support many use-cases, it can sometimes be too much of a good thing!
 
