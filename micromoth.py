@@ -1,5 +1,24 @@
-# This is the MicroPython version of Qiskit. For the full version, see qiskit.org.
-# It has many more features, and access to real quantum computers.
+# -*- coding: utf-8 -*-
+
+# (C) Copyright Moth Quantum 2024.
+#
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE.txt file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
+
+# (C) Copyright IBM 2023.
+#
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE.txt file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
 
 import random
 from math import cos,sin,pi
@@ -55,6 +74,18 @@ class QuantumCircuit:
     '''Applies a crx gate to the given source and target qubits.'''
     self.data.append(('crx',theta,s,t))
   
+  def swap(self,s,t):
+    '''Applies a swap to the given source and target qubits.'''
+    self.data.append(('cx',t,s))
+    self.data.append(('cx',s,t))
+    self.data.append(('cx',t,s))
+
+  def partialswap(self,theta,s,t):
+    '''Applies a partial swap to the given source and target qubits.'''
+    self.data.append(('cx',t,s))
+    self.data.append(('crx',theta,s,t))
+    self.data.append(('cx',t,s))
+
   def measure(self,q,b):
     '''Applies an measure gate to the given qubit and bit.'''
     assert b<self.num_clbits, 'Index for output bit out of range.'

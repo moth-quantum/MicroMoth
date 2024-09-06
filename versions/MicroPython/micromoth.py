@@ -27,6 +27,14 @@ class QuantumCircuit:
     self.data.append(('cx',s,t))
   def crx(self,theta,s,t):
     self.data.append(('crx',theta,s,t))
+  def swap(self,s,t):
+    self.data.append(('cx',t,s))
+    self.data.append(('cx',s,t))
+    self.data.append(('cx',t,s))
+  def partialswap(self,theta,s,t):
+    self.data.append(('cx',t,s))
+    self.data.append(('crx',theta,s,t))
+    self.data.append(('cx',t,s))
   def measure(self,q,b):
     assert b<self.num_clbits, 'Index for output bit out of range.'
     assert q<self.num_qubits, 'Index for qubit out of range.'
