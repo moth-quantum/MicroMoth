@@ -27,16 +27,25 @@ class QuantumCircuit:
     self.data.append(('cx',s,t))
   def crx(self,theta,s,t):
     self.data.append(('crx',theta,s,t))
+  def swap(self,s,t):
+    self.data.append(('swap',s,t))
   def measure(self,q,b):
     assert b<self.num_clbits, 'Index for output bit out of range.'
     assert q<self.num_qubits, 'Index for qubit out of range.'
     self.data.append(('m',q,b))
+  def measure_all(self):
+      if self.num_clbits==0:
+        self.num_clbits = self.num_qubits
+      for q in range(self.num_qubits):
+        self.measure(q,q)
   def ry(self,theta,q):
     self.rx(pi/2,q)
     self.rz(theta,q)
     self.rx(-pi/2,q)
   def z(self,q):
     self.rz(pi,q)
+  def t(self,q):
+    self.rz(pi/4,q)
   def y(self,q):
     self.rz(pi,q)
     self.x(q)
@@ -89,12 +98,16 @@ def simulate(qc,shots=1024,get='counts',noise_model=[]):
       for i0 in range(2**l):
         for i1 in range(2**(h-l-1)):
           for i2 in range(2**(qc.num_qubits-h-1)):
-            b0=i0+2**(l+1)*i1+2**(h+1)*i2+2**s 
-            b1=b0+2**t  
+            b00=i0+2**(l+1)*i1+2**(h+1)*i2 
+            b01=b00+2**t 
+            b10=b00+2**s 
+            b11=b10+2**t 
             if gate[0]=='cx':
-                k[b0],k[b1]=k[b1],k[b0] 
-            else:
-                k[b0],k[b1]=turn(k[b0],k[b1],theta) 
+                k[b10],k[b11]=k[b11],k[b10] 
+            elif gate[0]=='crx':
+                k[b10],k[b11]=turn(k[b10],k[b11],theta) 
+            elif gate[0]=='swap':
+                k[b01],k[b10]=k[b10],k[b01] 
   if get=='statevector':
     return k
   else:

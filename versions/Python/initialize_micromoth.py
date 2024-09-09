@@ -1,6 +1,6 @@
-# First we strip comments and blank lines from the top-level version of MicroQiskit.py 
+# First we strip comments and blank lines from the top-level version of MicroMoth.py 
 
-f = open("../../microqiskit.py", "r")
+f = open("../../micromoth.py", "r")
 file = f.read().split('\n')
 f.close()
 
@@ -16,15 +16,15 @@ for j,line in enumerate(file):
         
 new_file = '\n'.join(new_file)
 
-f = open("microqiskit.py", "w")
+f = open("micromoth.py", "w")
 f.write( new_file )
 f.close()
 
-print('Comments removed from top-level version of MicroQiskit.py.')
+print('Comments removed from top-level version of MicroMoth.py.')
 
 # Then we test to see if it works!
 
-from microqiskit import *
+from micromoth import *
 
 shots = int(1e6)
 
@@ -115,8 +115,7 @@ def test_memory():
     qc = QuantumCircuit(2,2)
     qc.h(0)
     qc.h(1)
-    qc.measure(0,0)
-    qc.measure(1,1)
+    qc.measure_all()
     m = simulate(qc,shots=shots,get='memory')
     assert( len(m)==shots )
     p00 = 0

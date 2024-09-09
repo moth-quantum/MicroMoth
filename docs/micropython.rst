@@ -1,10 +1,9 @@
-MicroQiskit Library Reference
+MicroMoth Library Reference
 *****************************
 
-A version of Qiskit made for microcontrollers and for educational purposes.
-See https://qiskit.org for more on Qiskit.
+A minimal quantum SDK for Python. It is compatible with Python 2 and Python 3, as well as MicroPython and CircuitPython.
 
-.. module:: microqiskit
+.. module:: micromoth
 
 .. function:: simulate(qc,shots=1024,get='counts',noise_model=[]):
 
@@ -15,7 +14,7 @@ See https://qiskit.org for more on Qiskit.
     measurement gates, whereas the latter two do not and will ignore any meaasure
     gates present.
     
-    This is the MicroQiskit equivalent of the ``execute`` function in Qiskit, as
+    This is the MicroMoth equivalent of the ``execute`` function in Moth, as
     well as the ``Statevector`` and ``DensityMatrix`` classes, all of which can
     be used to run circuits. The form of the outputs have the following differences.
     
@@ -23,7 +22,7 @@ See https://qiskit.org for more on Qiskit.
     element list instead of standard Python complex number notation. So a
     number ``a+bj`` will become ``[a,b]``.
     
-    A limited capacity for adding noise is implemented in MicroQiskit. Specifically,
+    A limited capacity for adding noise is implemented in MicroMoth. Specifically,
     bit flip errors can be added at the very end of the circuit to all qubits. To
     apply this, supply a list of the desired error probabilities for each qubit as
     the ``noise_model`` argument.
@@ -35,7 +34,7 @@ See https://qiskit.org for more on Qiskit.
     that are applied to a register of qubits. At the end, a binary output is
     recorded on a register of bits.
     
-    This is the MicroQiskit version of the identically named class in Qiskit.
+    This is the MicroMoth version of the identically named class in Moth.
 
     .. classmethod:: initialize(ket)
     
@@ -63,14 +62,33 @@ See https://qiskit.org for more on Qiskit.
     .. classmethod:: h(qubit)
     
         Adds an ``h`` gate to the circuit on the given qubit.
+
+    .. classmethod:: t(qubit)
+    
+        Adds aa ``t`` gate to the circuit on the given qubit.
     
     .. classmethod:: cx(control,target)
     
         Adds a ``cx`` gate to the circuit for the given control and target qubits.
+
+    .. classmethod:: crx(control,target)
+    
+        Adds a ``crx`` gate to the circuit for the given control and target qubits.
+        The angle is given by ``theta``.
+
+    .. classmethod:: swap(control,target)
+    
+        Adds a ``swap`` gate to the circuit for the given pair of qubits.
     
     .. classmethod:: measure(qubit,bit)
     
         Adds a measure gate, which extracts a bit of output from the given qubit.
+        Note that measurements are always applied at the end, irrespective of where they are placed in the circuit.
+
+    .. classmethod:: measure_all()
+    
+        Adds a measure gate for each qubit, reading out to a bit with the same index.
+        If no classical register is present, one is formed of the required size.
         
     .. attribute:: num_qubits
     

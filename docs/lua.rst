@@ -1,9 +1,7 @@
 MicroQiskit Library Reference
 *****************************
 
-A version of Qiskit made for educational purposes.
-See https://qiskit.org for more on Qiskit.
-
+A minimal quantum SDK for Lua.
 
 .. function:: simulate(qc,get,counts):
 
@@ -64,16 +62,33 @@ See https://qiskit.org for more on Qiskit.
     .. classmethod:: h(qubit)
     
         Adds an ``h`` gate to the circuit on the given qubit.
+
+    .. classmethod:: t(qubit)
+    
+        Adds aa ``t`` gate to the circuit on the given qubit.
     
     .. classmethod:: cx(control,target)
     
         Adds a ``cx`` gate to the circuit for the given control and target qubits.
+
+    .. classmethod:: crx(control,target)
+    
+        Adds a ``crx`` gate to the circuit for the given control and target qubits.
+        The angle is given by ``theta``.
+
+    .. classmethod:: swap(control,target)
+    
+        Adds a ``swap`` gate to the circuit for the given pair of qubits.
     
     .. classmethod:: measure(qubit,bit)
     
         Adds a measure gate, which extracts a bit of output from the given qubit.
-        Note that, unlike in the full version of Qiskit, measurements are always
-        applied at the end, irrespective of where they are placed in the circuit.
+        Note that measurements are always applied at the end, irrespective of where they are placed in the circuit.
+
+    .. classmethod:: measure_all()
+    
+        Adds a measure gate for each qubit, reading out to a bit with the same index.
+        If no classical register is present, one is formed of the required size.
     
     .. attribute:: num_qubits
     

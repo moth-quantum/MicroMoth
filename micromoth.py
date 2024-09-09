@@ -1,5 +1,24 @@
-# This is the MicroPython version of Qiskit. For the full version, see qiskit.org.
-# It has many more features, and access to real quantum computers.
+# -*- coding: utf-8 -*-
+
+# (C) Copyright Moth Quantum 2024.
+#
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE.txt file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
+
+# (C) Copyright IBM 2023.
+#
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE.txt file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
 
 import random
 from math import cos,sin,pi
@@ -54,12 +73,23 @@ class QuantumCircuit:
   def crx(self,theta,s,t):
     '''Applies a crx gate to the given source and target qubits.'''
     self.data.append(('crx',theta,s,t))
-  
+
+  def swap(self,s,t):
+    '''Applies a swap to the given source and target qubits.'''
+    self.data.append(('swap',s,t))
+
   def measure(self,q,b):
-    '''Applies an measure gate to the given qubit and bit.'''
+    '''Applies a measure gate to the given qubit and bit.'''
     assert b<self.num_clbits, 'Index for output bit out of range.'
     assert q<self.num_qubits, 'Index for qubit out of range.'
     self.data.append(('m',q,b))
+
+  def measure_all(self):
+      '''Applies a measure gate to all qubits. Creates a classical register if none exists.'''
+      if self.num_clbits==0:
+        self.num_clbits = self.num_qubits
+      for q in range(self.num_qubits):
+        self.measure(q,q)
   
   def ry(self,theta,q):
     '''Applies an ry gate to the given qubit by the given angle.'''
@@ -72,13 +102,18 @@ class QuantumCircuit:
     # This gate is constructed from `rz`.
     '''Applies a z gate to the given qubit.'''
     self.rz(pi,q)
+
+  def t(self,q):
+    # This gate is constructed from `rz`.
+    '''Applies a z gate to the given qubit.'''
+    self.rz(pi/4,q)
   
   def y(self,q):
     '''Applies an y gate to the given qubit.'''
     # This gate is constructed from `rz` and `x`.
     self.rz(pi,q)
     self.x(q)
-
+  
 
 def simulate(qc,shots=1024,get='counts',noise_model=[]):
   '''Simulates the given circuit `qc`, and outputs the results in the form specified by `shots` and `get`.'''
@@ -164,12 +199,16 @@ def simulate(qc,shots=1024,get='counts',noise_model=[]):
       for i0 in range(2**l):
         for i1 in range(2**(h-l-1)):
           for i2 in range(2**(qc.num_qubits-h-1)):
-            b0=i0+2**(l+1)*i1+2**(h+1)*i2+2**s # Index corresponding to bit string for which digit `s` is `1` and digit `t` is '0'.
-            b1=b0+2**t  # Index corresponding to the same bit string except that digit `t` is '1'.
+            b00=i0+2**(l+1)*i1+2**(h+1)*i2 # Index for the bit string where digits `s` and `t` are both `0``.
+            b01=b00+2**t # As above but the bits for `s` and `t` are `0` and `1`.
+            b10=b00+2**s # As above but the bits for `t` and `s` are `1` and `0`.
+            b11=b10+2**t # As above but the bits for `t` and `s` are `1` and `1`.
             if gate[0]=='cx':
-                k[b0],k[b1]=k[b1],k[b0] # Flip the values.
-            else:
-                k[b0],k[b1]=turn(k[b0],k[b1],theta) # Perform the rotation.
+                k[b10],k[b11]=k[b11],k[b10] # Flip the values.
+            elif gate[0]=='crx':
+                k[b10],k[b11]=turn(k[b10],k[b11],theta) # Perform the rotation.
+            elif gate[0]=='swap':
+                k[b01],k[b10]=k[b10],k[b01] # Flip the values.
   
   # Now for the outputs.
     
