@@ -2,7 +2,7 @@
 
 This version of MicroMoth is compatible with MicroPython, CircuitPython, Python 2 and Python 3.
 
-The [micromoth.py](micromoth.py) file found here is the same as that in the top-level folder, but with comments and blank lines removed. This is to reduce the file size, in order to better fit on a microcontroller.
+The [micromoth.py](micromoth.py) file found here is the same as that in the top-level folder, but with comments and blank lines removed. This is to reduce the file size, in order to better fit on a microcontroller. If it still doesn't fit, you can try deleting methods from the `QuantumCircuit`class that you don't use.
 
 The creation of this file is done automatically by running [initialize_micromoth.py](initialize_micromoth.py). This process also performs tests to ensure that MicroMoth is working correctly.
 
