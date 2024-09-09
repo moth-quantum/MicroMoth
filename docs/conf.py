@@ -17,9 +17,9 @@
 
 # -- Project information -----------------------------------------------------
 
-project = "Basic Sphinx Example Project"
-copyright = "2022, Read the Docs core team"
-author = "Read the Docs core team"
+project = "MicroMoth"
+copyright = "2024, Moth Quantum"
+author = "Moth Quantum"
 
 
 # -- General configuration ---------------------------------------------------
@@ -31,6 +31,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.intersphinx",
+    "myst_parser",
 ]
 
 intersphinx_mapping = {
