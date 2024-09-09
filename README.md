@@ -21,7 +21,7 @@ MicroMoth also contains ports for other languages, so you can bring the world of
 
 Installation guides for the various versions of MicroMoth can be found in the corresponding README files.
 
-* [MicroPython/Python 2/Python 3](versions/MicroPython/README.md)
+* [MicroPython/Python 2/Python 3](versions/Python/README.md)
 * [Lua](versions/Lua/README.md)
 
 

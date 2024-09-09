@@ -33,6 +33,11 @@ class QuantumCircuit:
     assert b<self.num_clbits, 'Index for output bit out of range.'
     assert q<self.num_qubits, 'Index for qubit out of range.'
     self.data.append(('m',q,b))
+  def measure_all(self):
+      if self.num_clbits==0:
+        self.num_clbits = self.num_qubits
+      for q in range(self.num_qubits):
+        self.measure(q,q)
   def ry(self,theta,q):
     self.rx(pi/2,q)
     self.rz(theta,q)

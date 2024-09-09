@@ -79,10 +79,17 @@ class QuantumCircuit:
     self.data.append(('swap',s,t))
 
   def measure(self,q,b):
-    '''Applies an measure gate to the given qubit and bit.'''
+    '''Applies a measure gate to the given qubit and bit.'''
     assert b<self.num_clbits, 'Index for output bit out of range.'
     assert q<self.num_qubits, 'Index for qubit out of range.'
     self.data.append(('m',q,b))
+
+  def measure_all(self):
+      '''Applies a measure gate to all qubits. Creates a classical register if none exists.'''
+      if self.num_clbits==0:
+        self.num_clbits = self.num_qubits
+      for q in range(self.num_qubits):
+        self.measure(q,q)
   
   def ry(self,theta,q):
     '''Applies an ry gate to the given qubit by the given angle.'''

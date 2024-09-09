@@ -83,6 +83,12 @@ A minimal quantum SDK for Python. It is compatible with Python 2 and Python 3, a
     .. classmethod:: measure(qubit,bit)
     
         Adds a measure gate, which extracts a bit of output from the given qubit.
+        Note that measurements are always applied at the end, irrespective of where they are placed in the circuit.
+
+    .. classmethod:: measure_all()
+    
+        Adds a measure gate for each qubit, reading out to a bit with the same index.
+        If no classical register is present, one is formed of the required size.
         
     .. attribute:: num_qubits
     

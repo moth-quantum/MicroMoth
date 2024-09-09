@@ -83,8 +83,12 @@ A minimal quantum SDK for Lua.
     .. classmethod:: measure(qubit,bit)
     
         Adds a measure gate, which extracts a bit of output from the given qubit.
-        Note that, unlike in the full version of Qiskit, measurements are always
-        applied at the end, irrespective of where they are placed in the circuit.
+        Note that measurements are always applied at the end, irrespective of where they are placed in the circuit.
+
+    .. classmethod:: measure_all()
+    
+        Adds a measure gate for each qubit, reading out to a bit with the same index.
+        If no classical register is present, one is formed of the required size.
     
     .. attribute:: num_qubits
     

@@ -67,7 +67,7 @@ print("\nNext, a single qubit, biased towards 0")
 local qc3 = QuantumCircuit()
 qc3.set_registers(1,1)
 qc3.rx(pi/4,0)
-qc3.measure(0,0)
+qc3.measure_all(0,0)
 
 print("\nThe counts are\n")
 result3 = simulate(qc3,"counts")

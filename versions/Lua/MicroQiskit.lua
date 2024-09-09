@@ -56,6 +56,12 @@ function QuantumCircuit ()
     qc.data[#qc.data+1] = ( {'m',q,b} )
   end
 
+  function qc.measure_all ()
+    for q=0,qc.num_qubits-1 do
+      qc.measure (q,q)
+    end
+  end
+
   function qc.rz (theta,q)
     qc.h(q)
     qc.rx(theta,q)

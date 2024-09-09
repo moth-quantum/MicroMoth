@@ -115,8 +115,7 @@ def test_memory():
     qc = QuantumCircuit(2,2)
     qc.h(0)
     qc.h(1)
-    qc.measure(0,0)
-    qc.measure(1,1)
+    qc.measure_all()
     m = simulate(qc,shots=shots,get='memory')
     assert( len(m)==shots )
     p00 = 0
