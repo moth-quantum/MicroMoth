@@ -42,7 +42,7 @@ def test_x():
     qc = QuantumCircuit(2)
     qc.x(0)
     qc.x(1)
-    assert( simulate(qc,shots=shots,get='statevector')==[[0.0,0.0],[0.0,0.0],[0.0,0.0],[1.0,0.0]] ) 
+    assert( simulate(qc,shots=shots,get='statevector')==[[0.0,0.0],[0.0,0.0],[0.0,0.0],[1.0,0.0]] )
     
 def test_h():
     qc = QuantumCircuit(2)
@@ -185,6 +185,7 @@ def test_multiqubit():
         p = float(counts[string])/shots
         check = check and round(p,2)==0.25
     assert( check )
+    print(qc.qasm())
         
 def test_reorder ():
     qc = QuantumCircuit(2,2)
@@ -222,6 +223,7 @@ test_memory()
 test_counts()
 test_add()
 test_multiqubit()
+#test_reorder()
 test_noise ()
 
 print('Tests passed!')

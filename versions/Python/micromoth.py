@@ -49,6 +49,27 @@ class QuantumCircuit:
   def y(self,q):
     self.rz(pi,q)
     self.x(q)
+  def qasm(self):
+    qasm = 'OPENQASM 2.0;\ninclude "qelib1.inc";\n\n'
+    qasm += 'qreg q['+str(self.num_qubits)+'];\n'
+    if self.num_clbits:
+      qasm += 'creg c['+str(self.num_clbits)+'];\n'
+    qasm += '\n'
+    for gate in self.data:
+      if gate[0] in ['x', 'h']:
+        qasm += gate[0]+' q['+str(gate[1])+'];\n'
+      elif gate[0] in ['rx', 'rz']:
+        qasm += gate[0]+'('+str(gate[1])+')  q['+str(gate[1])+'];\n'
+      elif gate[0]=='m':
+        qasm += 'measure q['+str(gate[1])+'] -> c['+str(gate[2])+'];\n'
+      elif gate[0] in ['cx', 'swap']:
+        qasm += gate[0]+' q['+str(gate[1])+'], q['+str(gate[2])+'];\n'
+      elif gate[0]=='crx':
+        qasm += 'cz q['+str(gate[2])+'], q['+str(gate[3])+'];\n'
+        qasm += 'rx('+str(-gate[0]/2)+')  q['+str(gate[3])+'];\n'
+        qasm += 'cz q['+str(gate[2])+'], q['+str(gate[3])+'];\n'
+        qasm += 'rx(-'+str(gate[0]/2)+')  q['+str(gate[3])+'];\n'
+    return qasm
 def simulate(qc,shots=1024,get='counts',noise_model=[]):
   def superpose(x,y):
     return [r2*(x[j]+y[j])for j in range(2)],[r2*(x[j]-y[j])for j in range(2)]

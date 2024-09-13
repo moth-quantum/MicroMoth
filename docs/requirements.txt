@@ -1,2 +1,9 @@
-sphinx_rtd_theme
-myst_parser
+Apparently there is a way to get pygame games on the web. Unfortunately, it only builds them on Windows!
+
+If you get some time, could you try doing this
+https://medium.com/@eri.zhang21/running-a-python-game-on-the-web-aa8b13037e15
+for this
+https://github.com/quantumjim/QuantumBlurDemoHek
+I already did everything up until pygbag <project name>
+
+I am sure that there will be another fatal problem even on Windows, but it would be good to know what it is!
