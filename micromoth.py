@@ -180,10 +180,10 @@ def simulate(qc,shots=1024,get='counts',noise_model=[]):
             theta = gate[1]
             k[b0],k[b1]=phaseturn(k[b0],k[b1],theta) 
     
-    elif gate[0] in ['cx','crx']: # These are the only two qubit gates recognized by the simulator.
+    elif gate[0] in ['cx','crx', 'swap']:
       
       # Get the source and target qubits
-      if gate[0]=='cx': 
+      if gate[0] in ['cx', 'swap']: 
         [s,t] = gate[1:]
       else:
         theta = gate[1]
