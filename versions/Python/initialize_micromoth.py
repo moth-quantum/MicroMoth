@@ -111,6 +111,35 @@ def test_cx():
     qc.cx(0,1)
     assert( simulate(qc,shots=shots,get='statevector')==[[0.0, 0.0], [0.0, 0.0], [1.0, 0.0], [0.0, 0.0]] )
 
+
+def test_swap00():
+    qc = QuantumCircuit(2)
+    assert( simulate(qc,shots=shots,get='statevector')==[[1.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0]] )
+    qc.swap(0,1)
+    assert( simulate(qc,shots=shots,get='statevector')==[[1.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0]] )
+
+def test_swap01():
+    qc = QuantumCircuit(2)
+    qc.x(0)
+    assert( simulate(qc,shots=shots,get='statevector')==[[0.0, 0.0], [1.0, 0.0], [0.0, 0.0], [0.0, 0.0]] )
+    qc.swap(0,1)
+    assert( simulate(qc,shots=shots,get='statevector')==[[0.0, 0.0], [0.0, 0.0], [1.0, 0.0], [0.0, 0.0]] )
+
+def test_swap10():
+    qc = QuantumCircuit(2)
+    qc.x(1)
+    assert( simulate(qc,shots=shots,get='statevector')==[[0.0, 0.0], [0.0, 0.0], [1.0, 0.0], [0.0, 0.0]] )
+    qc.swap(0,1)
+    assert( simulate(qc,shots=shots,get='statevector')==[[0.0, 0.0], [1.0, 0.0], [0.0, 0.0], [0.0, 0.0]] )
+
+def test_swap11():
+    qc = QuantumCircuit(2)
+    qc.x(0)
+    qc.x(1)
+    assert( simulate(qc,shots=shots,get='statevector')==[[0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [1.0, 0.0]] )
+    qc.swap(0,1)
+    assert( simulate(qc,shots=shots,get='statevector')==[[0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [1.0, 0.0]] )
+
 def test_memory():
     qc = QuantumCircuit(2,2)
     qc.h(0)
@@ -223,5 +252,9 @@ test_counts()
 test_add()
 test_multiqubit()
 test_noise ()
+test_swap00()
+test_swap01()
+test_swap10()
+test_swap11()
 
 print('Tests passed!')
