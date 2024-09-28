@@ -97,9 +97,7 @@ function QuantumCircuit ()
   end
 
   function qc.swap (s,t)
-    qc.cx(s,t)
-    qc.cx(t,s)
-    qc.cx(s,t)
+    qc.data[#qc.data+1] = ( {'swap',s,t} )
   end
 
   return qc
@@ -189,7 +187,7 @@ function simulate (qc, get, shots)
         end
       end
 
-    elseif gate[1]=="cx" then
+    elseif gate[1]=="cx" or gate[1] == "swap" then
 
       s = gate[2]
       t = gate[3]
@@ -205,11 +203,18 @@ function simulate (qc, get, shots)
       for i0=0,2^l-1 do
         for i1=0,2^(h-l-1)-1 do
           for i2=0,2^(qc.num_qubits-h-1)-1 do
-            b1 = i0 + 2^(l+1)*i1 + 2^(h+1)*i2 + 2^s + 1
-            b2 = b1 + 2^t
-            e = {{ket[b1][1],ket[b1][2]},{ket[b2][1],ket[b2][2]}}
-            ket[b1] = e[2]
-            ket[b2] = e[1]
+            b1 = i0 + 2^(l+1)*i1 + 2^(h+1)*i2 + 2^s + 1 --01
+	    b2 = b1 + 2^t --11
+	    b3 = b2 - 2^s
+            if gate[1] == "cx" then 
+		    e = {{ket[b1][1],ket[b1][2]},{ket[b2][1],ket[b2][2]}}
+		    ket[b1] = e[2]
+		    ket[b2] = e[1]
+	    elseif gate[1] == "swap" then
+		    e = {{ket[b1][1],ket[b1][2]},{ket[b3][1],ket[b3][2]}}
+		    ket[b1] = e[2]
+		    ket[b3] = e[1]
+	    end
           end
         end
       end
