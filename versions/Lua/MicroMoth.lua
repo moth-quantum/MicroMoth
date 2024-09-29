@@ -201,8 +201,8 @@ function simulate (qc, get, shots)
       for i0=0,2^l-1 do
         for i1=0,2^(h-l-1)-1 do
           for i2=0,2^(qc.num_qubits-h-1)-1 do
-            b1 = i0 + 2^(l+1)*i1 + 2^(h+1)*i2 + 2^s + 1 --01
-	    b2 = b1 + 2^t --11
+            b1 = i0 + 2^(l+1)*i1 + 2^(h+1)*i2 + 2^s + 1
+	    b2 = b1 + 2^t
 	    b3 = b2 - 2^s
 	    e = {{ket[b1][1],ket[b1][2]},{ket[b2][1],ket[b2][2]}}
             if gate[1] == "cx" then 
