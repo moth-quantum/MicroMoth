@@ -89,12 +89,6 @@ function QuantumCircuit ()
 
   function qc.crx (theta,s,t)
     qc.data[#qc.data+1] = ( {'crx',s,t,theta} )
-    -- qc.rx(theta/2,t)
-    -- qc.h(t)
-    -- qc.cx(s,t)
-    -- qc.rz(-theta/2,t)
-    -- qc.cx(s,t)
-    -- qc.h(t)
   end
 
   function qc.swap (s,t)
