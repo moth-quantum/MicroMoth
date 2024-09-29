@@ -88,12 +88,13 @@ function QuantumCircuit ()
   end
 
   function qc.crx (theta,s,t)
-    qc.rx(theta/2,t)
-    qc.h(t)
-    qc.cx(s,t)
-    qc.rz(-theta/2,t)
-    qc.cx(s,t)
-    qc.h(t)
+    qc.data[#qc.data+1] = ( {'crx',s,t,theta} )
+    -- qc.rx(theta/2,t)
+    -- qc.h(t)
+    -- qc.cx(s,t)
+    -- qc.rz(-theta/2,t)
+    -- qc.cx(s,t)
+    -- qc.h(t)
   end
 
   function qc.swap (s,t)
@@ -136,6 +137,10 @@ function simulate (qc, get, shots)
     return out
   end
 
+  function turn(k,theta)
+	return {{k[1][1]*math.cos(theta/2)+k[2][2]*math.sin(theta/2), k[1][2]*math.cos(theta/2)-k[2][1]*math.sin(theta/2)}, {k[2][1]*math.cos(theta/2)+k[1][2]*math.sin(theta/2), k[2][2]*math.cos(theta/2)-k[1][1]*math.sin(theta/2)}}
+  end
+
 
   ket = {}
   for j=1,2^qc.num_qubits do
@@ -173,10 +178,9 @@ function simulate (qc, get, shots)
             ket[b2] = e[1]
           elseif gate[1]=="rx" then
             theta = gate[2]
-            ket[b1][1] = e[1][1]*math.cos(theta/2)+e[2][2]*math.sin(theta/2)
-            ket[b1][2] = e[1][2]*math.cos(theta/2)-e[2][1]*math.sin(theta/2)
-            ket[b2][1] = e[2][1]*math.cos(theta/2)+e[1][2]*math.sin(theta/2)
-            ket[b2][2] = e[2][2]*math.cos(theta/2)-e[1][1]*math.sin(theta/2)
+	    turn_applied = turn(e,theta)
+            ket[b1] = turn_applied[1]
+            ket[b2] = turn_applied[2]
           elseif gate[1]=="h" then
             for k=1,2 do
               ket[b1][k] = (e[1][k] + e[2][k])/math.sqrt(2)
@@ -187,7 +191,7 @@ function simulate (qc, get, shots)
         end
       end
 
-    elseif gate[1]=="cx" or gate[1] == "swap" then
+    elseif gate[1]=="cx" or gate[1] == "swap" or gate[1] == "crx" then
 
       s = gate[2]
       t = gate[3]
@@ -206,14 +210,19 @@ function simulate (qc, get, shots)
             b1 = i0 + 2^(l+1)*i1 + 2^(h+1)*i2 + 2^s + 1 --01
 	    b2 = b1 + 2^t --11
 	    b3 = b2 - 2^s
+	    e = {{ket[b1][1],ket[b1][2]},{ket[b2][1],ket[b2][2]}}
             if gate[1] == "cx" then 
-		    e = {{ket[b1][1],ket[b1][2]},{ket[b2][1],ket[b2][2]}}
 		    ket[b1] = e[2]
 		    ket[b2] = e[1]
 	    elseif gate[1] == "swap" then
 		    e = {{ket[b1][1],ket[b1][2]},{ket[b3][1],ket[b3][2]}}
 		    ket[b1] = e[2]
 		    ket[b3] = e[1]
+	    else
+		    theta = gate[4]
+		    turn_applied = turn(e,theta)
+		    ket[b1] = turn_applied[1]
+		    ket[b2] = turn_applied[2]	
 	    end
           end
         end
