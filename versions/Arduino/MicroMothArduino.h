@@ -91,7 +91,7 @@ class QuantumCircuit {
       data[size++] = Op(X, 0.0, q);
     }
 
-    // Haardamard gate
+    // Hadamard gate
     void h(int q) {
       if (size >= capacity) resize();
       data[size++] = Op(H, 0.0, q);
