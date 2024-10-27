@@ -21,6 +21,8 @@
 #include <avr/wdt.h>
 #include <avr/interrupt.h>
 
+#include "MicroMothArduino.h"
+
 // double r2 = 1 / sqrt(2.0);
 // (for .h) double r2 = 0.707106781; // modified for Arduino
 
@@ -32,6 +34,17 @@ void setup() {
   // Serial.println(PI, 11); // PI is defined in arduino.h
 }
 
+void test() {
+  QuantumCircuit qc(2, 2);
+
+  int initState[] = {1, 0};
+
+  qc.initialise(initState, 2);
+
+  qc.h(0);
+  qc.cx(0, 1);
+}
+
 double custom_random(double minFloat, double maxFloat)
 {
   // using bitshift left (<<) for the operation
@@ -41,5 +54,4 @@ double custom_random(double minFloat, double maxFloat)
 void loop() {
   // put your main code here, to run repeatedly:
   // Serial.println(custom_random(0.00, 1.00), 11); // 8 for float, 11 for double
-  
 }
