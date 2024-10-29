@@ -23,15 +23,40 @@
 
 #include <Arduino.h>
 
-double r2 = 0.707106781; // modified for Arduino
+double r2 = 0.707106781; // modified for Arduino 
+// Which should I use? float or double?
 
-struct CNum {
+struct ComplexNumber {
   float real;
   float imag;
 
-  CNum (float r = 0.0, float i = 0.0) : real(r), imag(i) { }
+  // A constructor
+  ComplexNumber(float r = 0.0, float i = 0.0) : real(r), imag(i) { }
 
-  
+  // Addition of two Complex numbers
+  ComplexNumber operator+(const ComplexNumber& other) const {
+    return ComplexNumber(real + other.real, imag + other.imag);
+  }
+
+  // Subtration of two Complex numbers
+  ComplexNumber operator-(const ComplexNumber& other) const {
+    return ComplexNumber(real - other.real, imag - other.imag);
+  }
+
+  // Multiplicatin of two Complex numbers
+  ComplexNumber operator*(const ComplexNumber& other) const {
+    return ComplexNumber(real * other.real - imag * other.imag, real * other.imag + imag * other.real);
+  }
+
+  // Magnitude of the Complex number
+  float magnitude() const {
+    return sqrt(real * real + imag * imag);
+  }
+
+  // Conjugate of the Complex number
+  ComplexNumber conjugate() const {
+    return ComplexNumber(real, -imag);
+  }
 };
 
 #endif

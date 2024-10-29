@@ -26,7 +26,7 @@
 class QuantumCircuit {
   public:
     // Gate-based quantum computing
-    enum GateOp { INIT, X, RX, RZ, H, CX, CRX, SWAP, RY, Z, T, Y };
+    enum GateOp { INIT, X, RX, RZ, H, CX, CRX, SWAP, RY, Z, T, Y, M };
 
     struct Op {
       GateOp gate; // which gate?
@@ -111,7 +111,7 @@ class QuantumCircuit {
 
     // Rotation-Y gate
     void ry(float theta, int q) {
-      rx(PI / 2.0, q);
+      rx(HALF_PI, q);
       rz(theta, q);
       rx((-PI) / 2.0, q);
     }
@@ -148,6 +148,30 @@ class QuantumCircuit {
     void swap(int s, int t) { // Applies a swap to the given source and target qubits.
       if (size >= capacity) resize();
       data[size++] = Op(SWAP, 0.0, s, t);
+    }
+
+    // Storing the results to classical bits
+    void measure(int q, int b) {
+      if (b >= num_clbits) {
+        Serial.println("Error: Index for output bit out of range.");
+      }
+
+      if (q >= num_qubits) {
+        Serial.println("Error: Index for qubit out of range.");
+      }
+
+      if (size >= capacity) resize();
+      data[size++] = Op(M, 0.0, q, b);
+    }
+
+    // Same operation above for all qubits
+    void measure_all() {
+      if (num_clbits == 0) {
+        num_clbits = num_qubits;
+      }
+      for (int q = 0; q < num_qubits; q++) {
+        measure(q, q);
+      }
     }
 };
 

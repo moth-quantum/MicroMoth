@@ -41,8 +41,7 @@ void test() {
 
   qc.initialise(initState, 2);
 
-  qc.h(0);
-  qc.cx(0, 1);
+  qc.x(0);
 }
 
 double custom_random(double minFloat, double maxFloat)
