@@ -23,8 +23,13 @@
 
 #include <Arduino.h>
 
-double r2 = 0.707106781; // modified for Arduino 
-// Which should I use? float or double?
+float r2 = 0.707106781; // modified for Arduino 
+
+float custom_random(double minFloat, double maxFloat)
+{
+  // using bitshift left (<<) for the operation
+  return minFloat + random(1UL << 31) * (maxFloat - minFloat) / (1UL << 31);  // half double max values. 63 for max values
+}
 
 struct ComplexNumber {
   float real;

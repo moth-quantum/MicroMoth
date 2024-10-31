@@ -22,32 +22,35 @@
 #include <avr/interrupt.h>
 
 #include "MicroMothArduino.h"
+QuantumCircuit qc(2); // 2 qubits
 
 // double r2 = 1 / sqrt(2.0);
 // (for .h) double r2 = 0.707106781; // modified for Arduino
 
+void test() {
+  int init_state[] = {0};
+  qc.initialise(new int[1]{0}, 1);
+  
+  qc.h(0);
+  qc.x(1);
+  
+  qc.measure_all();
+
+  qc.simulate(qc, 1024, "statevector");
+
+  ComplexNumber* states = qc.statevectors;
+  
+  qc.circuitPrint();
+  
+}
+
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(9600);
+  Serial.begin(115200);
   // Serial.println(r2, 11); // In Arduino, r2 = 0.707106781, based on the result.
   // Serial.print() prints two decimals ONLY.
   // Serial.println(PI, 11); // PI is defined in arduino.h
-}
-
-void test() {
-  QuantumCircuit qc(2, 2);
-
-  int initState[] = {1, 0};
-
-  qc.initialise(initState, 2);
-
-  qc.x(0);
-}
-
-double custom_random(double minFloat, double maxFloat)
-{
-  // using bitshift left (<<) for the operation
-  return minFloat + random(1UL << 31) * (maxFloat - minFloat) / (1UL << 31);  // half double max values. 63 for max values
+  test();
 }
 
 void loop() {

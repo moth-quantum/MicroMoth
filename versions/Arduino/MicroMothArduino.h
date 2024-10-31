@@ -48,15 +48,19 @@ class QuantumCircuit {
 
     String name;
 
+    ComplexNumber* statevectors;
+
     // A constructor with the initial properties
     QuantumCircuit(int n, int m = 0) : num_qubits(n), num_clbits(m), size(0), capacity(10) {
       name = "";
       data = new Op[capacity]; // Allocate initial memory space
+      statevectors = nullptr;
     }
 
     // A deconstructor
     ~QuantumCircuit() {
       delete[] data;
+      delete[] statevectors; // reset
     }
 
     // Because Arduino doesn't support std::vector, this process is necessary.
@@ -172,6 +176,151 @@ class QuantumCircuit {
       for (int q = 0; q < num_qubits; q++) {
         measure(q, q);
       }
+    }
+
+        // Calculates the statevector for our quantum circuit
+    void simulate(QuantumCircuit &qc, int shots = 1024, char* get = "counts", float* noiseModel = nullptr) {
+      statevectors = new ComplexNumber[1 << qc.num_qubits];
+      for (int i = 0; i < (1 << qc.num_qubits); ++i) {
+        statevectors[i] = {0.0, 0.0};
+      }
+      statevectors[0] = {1.0, 0.0}; // Initialise: |0>
+
+      // simulate noise model
+      if (noiseModel) {
+        for (int j = 0; j < qc.num_qubits; ++j) {
+          noiseModel[j] = noiseModel[0] * qc.num_qubits;
+        }
+      }
+
+      // gate operations
+      for (int i = 0; i < qc.size; ++i) {
+        Op g = qc.data[i];
+        int j = g.target;
+
+        /*
+        if (g.gate == QuantumCircuit::INIT) {
+          statevectors[0] = {1.0, 0.0}; // Initialise statevectors to given state (for now simplified)
+        }
+        */
+        if (g.gate == QuantumCircuit::X) {
+          for (int i0 = 0; i0 < (1 << j); i0++) {
+            for (int i1 = 0; i1 < (1 << (qc.num_qubits - j - 1)); i1++) {
+              int b0 = i0 + (1 << (j + 1)) * i1;
+              int b1 = b0 + (1 << j);
+              ComplexNumber temp = statevectors[b0];
+              statevectors[b0] = statevectors[b1];
+              statevectors[b1] = temp;
+            }
+          }
+        }
+        else if (g.gate == QuantumCircuit::H) {
+          for (int i0 = 0; i0 < (1 << j); i0++) {
+            for (int i1 = 0; i1 < (1 << (qc.num_qubits - j - 1)); i1++) {
+              int b0 = i0 + (1 << (j + 1)) * i1;
+              int b1 = b0 + (1 << j);
+              ComplexNumber* r = qc.superposition(statevectors[b0], statevectors[b1]);
+              statevectors[b0] = r[0];
+              statevectors[b1] = r[1];
+            }
+          }
+        }
+        else if (g.gate == QuantumCircuit::RX) {
+          float th = g.angle;
+          for (int i0 = 0; i0 < (1 << j); i0++) {
+              for (int i1 = 0; i1 < (1 << (qc.num_qubits - j - 1)); i1++) {
+                  int b0 = i0 + (1 << (j + 1)) * i1;
+                  int b1 = b0 + (1 << j);
+                  ComplexNumber* r = qc.rotate(statevectors[b0], statevectors[b1], th);
+                  statevectors[b0] = r[0];
+                  statevectors[b1] = r[1];
+              }
+          }
+        }
+        else if (g.gate == QuantumCircuit::RZ) {
+          float th = g.angle;
+          for (int i0 = 0; i0 < (1 << j); i0++) {
+              for (int i1 = 0; i1 < (1 << (qc.num_qubits - j - 1)); i1++) {
+                  int b0 = i0 + (1 << (j + 1)) * i1;
+                  int b1 = b0 + (1 << j);
+                  ComplexNumber* r = qc.phaseturn(statevectors[b0], statevectors[b1], th);
+                  statevectors[b0] = r[0];
+                  statevectors[b1] = r[1];
+              }
+          }
+        }
+        else if (g.gate == QuantumCircuit::CX) {
+          int control = g.control;
+          int target = g.target;
+          int l = min(control, target);
+          int h = max(control, target);
+          for (int i0 = 0; i0 < (1 << l); i0++) {
+            for (int i1 = 0; i1 < (1 << (h - l - 1)); i1++) {
+              for (int i2 = 0; i2 < (1 << (qc.num_qubits - h - 1)); i2++) {
+                int b00 = i0 + (1 << (l + 1)) * i1 + (1 << (h + 1)) * i2;
+                int b10 = b00 + (1 << control);
+                int b11 = b10 + (1 << target);
+                ComplexNumber temp = statevectors[b10];
+                statevectors[b10] = statevectors[b11];
+                statevectors[b11] = temp;
+              }
+            }
+          }
+        }
+
+        if (strcmp(get, "statevector") == 0) {
+          // already stored statevectors as a member variable
+        }
+        
+      }
+
+      // delete[] statevectors; // reset
+    }
+
+    void circuitPrint() {
+      Serial.println("+++Statevector+++");
+      for (int i = 0; i < (1 << num_qubits); i++) {
+        Serial.print("Amplitude of state |");
+        Serial.print(i, BIN);
+        Serial.print(">: ");
+        Serial.print(statevectors[i].real, 4);
+        Serial.print(" + ");
+        Serial.print(statevectors[i].imag, 4);
+        Serial.println("i");
+      }
+    }
+
+  private:
+    ComplexNumber* superposition(ComplexNumber x, ComplexNumber y) {
+      static ComplexNumber superposResult[2];
+      superposResult[0] = x * r2 + y * r2; // (x + y) / sqrt(2)
+      superposResult[1] = x * r2 - y * r2; // (x - y) / sqrt(2)
+
+      return superposResult;
+    }
+
+    ComplexNumber* rotate(ComplexNumber x, ComplexNumber y, float tt) {
+      // rotates a qubit by an angle tt(theta)
+      static ComplexNumber rotResult[2];
+      float cos_tt = cos(tt / 2.0);
+      float sin_tt = sin(tt / 2.0);
+
+      rotResult[0] = ComplexNumber(x.real * cos_tt + y.imag * sin_tt, x.imag * cos_tt - y.real * sin_tt);
+      rotResult[1] = ComplexNumber(y.real * cos_tt + x.imag * sin_tt, y.imag * cos_tt - x.real * sin_tt);
+
+      return rotResult;
+    }
+
+    ComplexNumber* phaseturn(ComplexNumber x, ComplexNumber y, float tt) {
+      // Phase shift rotation for a qubit by an angle tt(theta)
+      static ComplexNumber phaseResult[2];
+      float cos_tt = cos(tt / 2);
+      float sin_tt = sin(tt / 2);
+
+      phaseResult[0] = ComplexNumber(x.real * cos_tt - x.imag * sin_tt, x.imag * cos_tt + x.real * sin_tt);
+      phaseResult[1] = ComplexNumber(y.real * cos_tt - y.imag * sin_tt, y.imag * cos_tt + y.real * sin_tt);
+
+      return phaseResult;
     }
 };
 
