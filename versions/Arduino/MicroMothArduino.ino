@@ -28,19 +28,20 @@ QuantumCircuit qc(2); // 2 qubits
 // (for .h) double r2 = 0.707106781; // modified for Arduino
 
 void test() {
-  int init_state[] = {0};
+  // int init_state[] = {0};
   qc.initialise(new int[1]{0}, 1);
-  
+
+  qc.cx(0, 1);
   qc.h(0);
-  qc.x(1);
+  qc.rx(HALF_PI, 1);
   
-  qc.measure_all();
+  // qc.measure_all();
 
   qc.simulate(qc, 1024, "statevector");
 
-  ComplexNumber* states = qc.statevectors;
+  // ComplexNumber* states = qc.statevectors;
   
-  qc.circuitPrint();
+  // qc.circuitPrint();
   
 }
 

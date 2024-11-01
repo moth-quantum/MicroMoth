@@ -27,6 +27,7 @@ class QuantumCircuit {
   public:
     // Gate-based quantum computing
     enum GateOp { INIT, X, RX, RZ, H, CX, CRX, SWAP, RY, Z, T, Y, M };
+    // If it passed onto it starts from the index 0. So for initialisation, printCircuit will produce 0.
 
     struct Op {
       GateOp gate; // which gate?
@@ -92,13 +93,13 @@ class QuantumCircuit {
     // Pauli-X gate
     void x(int q) {
       if (size >= capacity) resize();
-      data[size++] = Op(X, 0.0, q);
+      data[size++] = Op(X, 0.0, 0, q);
     }
 
     // Hadamard gate
     void h(int q) {
       if (size >= capacity) resize();
-      data[size++] = Op(H, 0.0, q);
+      data[size++] = Op(H, 0.0, 0, q);
     }
 
     // CX gate (Control-X gate)
@@ -110,7 +111,7 @@ class QuantumCircuit {
     // Rotation-X gate
     void rx(float theta, int q) {
       if (size >= capacity) resize();
-      data[size++] = Op(RX, theta, q);
+      data[size++] = Op(RX, theta, 0, q);
     }
 
     // Rotation-Y gate
@@ -123,7 +124,7 @@ class QuantumCircuit {
     // Rotation-Z gate
     void rz(float theta, int q) {
       if (size >= capacity) resize();
-      data[size++] = Op(RZ, theta, q);
+      data[size++] = Op(RZ, theta, 0, q);
     }
 
     // Pauli-Y gate
@@ -178,23 +179,23 @@ class QuantumCircuit {
       }
     }
 
-        // Calculates the statevector for our quantum circuit
+    // Calculates the statevector for our quantum circuit
     void simulate(QuantumCircuit &qc, int shots = 1024, char* get = "counts", float* noiseModel = nullptr) {
       statevectors = new ComplexNumber[1 << qc.num_qubits];
-      for (int i = 0; i < (1 << qc.num_qubits); ++i) {
+      for (int i = 0; i < (1 << qc.num_qubits); i++) {
         statevectors[i] = {0.0, 0.0};
       }
       statevectors[0] = {1.0, 0.0}; // Initialise: |0>
 
       // simulate noise model
       if (noiseModel) {
-        for (int j = 0; j < qc.num_qubits; ++j) {
+        for (int j = 0; j < qc.num_qubits; j++) {
           noiseModel[j] = noiseModel[0] * qc.num_qubits;
         }
       }
 
       // gate operations
-      for (int i = 0; i < qc.size; ++i) {
+      for (int i = 0; i < qc.size; i++) {
         Op g = qc.data[i];
         int j = g.target;
 
@@ -203,6 +204,7 @@ class QuantumCircuit {
           statevectors[0] = {1.0, 0.0}; // Initialise statevectors to given state (for now simplified)
         }
         */
+        
         if (g.gate == QuantumCircuit::X) {
           for (int i0 = 0; i0 < (1 << j); i0++) {
             for (int i1 = 0; i1 < (1 << (qc.num_qubits - j - 1)); i1++) {
@@ -250,16 +252,19 @@ class QuantumCircuit {
           }
         }
         else if (g.gate == QuantumCircuit::CX) {
-          int control = g.control;
-          int target = g.target;
-          int l = min(control, target);
-          int h = max(control, target);
+          int c = g.control;
+          int t = g.target;
+
+          int l = min(g.control, g.target);
+          int h = max(g.control, g.target);
+
           for (int i0 = 0; i0 < (1 << l); i0++) {
             for (int i1 = 0; i1 < (1 << (h - l - 1)); i1++) {
               for (int i2 = 0; i2 < (1 << (qc.num_qubits - h - 1)); i2++) {
                 int b00 = i0 + (1 << (l + 1)) * i1 + (1 << (h + 1)) * i2;
-                int b10 = b00 + (1 << control);
-                int b11 = b10 + (1 << target);
+                int b01 = b00 + (1 << t);
+                int b10 = b00 + (1 << c);
+                int b11 = b10 + (1 << t);
                 ComplexNumber temp = statevectors[b10];
                 statevectors[b10] = statevectors[b11];
                 statevectors[b11] = temp;
@@ -267,6 +272,8 @@ class QuantumCircuit {
             }
           }
         }
+
+        circuitPrint(g.gate);
 
         if (strcmp(get, "statevector") == 0) {
           // already stored statevectors as a member variable
@@ -277,11 +284,12 @@ class QuantumCircuit {
       // delete[] statevectors; // reset
     }
 
-    void circuitPrint() {
+    void circuitPrint(QuantumCircuit::GateOp tg) {
       Serial.println("+++Statevector+++");
+      Serial.println(tg);
       for (int i = 0; i < (1 << num_qubits); i++) {
         Serial.print("Amplitude of state |");
-        Serial.print(i, BIN);
+        Serial.print(i);
         Serial.print(">: ");
         Serial.print(statevectors[i].real, 4);
         Serial.print(" + ");
@@ -291,6 +299,7 @@ class QuantumCircuit {
     }
 
   private:
+
     ComplexNumber* superposition(ComplexNumber x, ComplexNumber y) {
       static ComplexNumber superposResult[2];
       superposResult[0] = x * r2 + y * r2; // (x + y) / sqrt(2)
@@ -313,7 +322,7 @@ class QuantumCircuit {
 
     ComplexNumber* phaseturn(ComplexNumber x, ComplexNumber y, float tt) {
       // Phase shift rotation for a qubit by an angle tt(theta)
-      static ComplexNumber phaseResult[2];
+      ComplexNumber phaseResult[2];
       float cos_tt = cos(tt / 2);
       float sin_tt = sin(tt / 2);
 
