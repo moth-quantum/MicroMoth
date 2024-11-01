@@ -31,9 +31,8 @@ void test() {
   // int init_state[] = {0};
   qc.initialise(new int[1]{0}, 1);
 
-  qc.cx(0, 1);
   qc.h(0);
-  qc.rx(HALF_PI, 1);
+  qc.x(1);
   
   // qc.measure_all();
 

@@ -124,7 +124,7 @@ class QuantumCircuit {
     // Rotation-Z gate
     void rz(float theta, int q) {
       if (size >= capacity) resize();
-      data[size++] = Op(RZ, theta, 0, q);
+      data[size++] = Op(RZ, theta, 0,q);
     }
 
     // Pauli-Y gate
@@ -289,7 +289,7 @@ class QuantumCircuit {
       Serial.println(tg);
       for (int i = 0; i < (1 << num_qubits); i++) {
         Serial.print("Amplitude of state |");
-        Serial.print(i);
+        Serial.print(i, BIN);
         Serial.print(">: ");
         Serial.print(statevectors[i].real, 4);
         Serial.print(" + ");
