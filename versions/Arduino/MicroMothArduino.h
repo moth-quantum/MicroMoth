@@ -26,7 +26,7 @@
 class QuantumCircuit {
   public:
     // Gate-based quantum computing
-    enum GateOp { INIT, X, RX, RZ, H, CX, CRX, SWAP, RY, Z, T, Y, M };
+    enum GateOp { INIT, X, RX, RZ, H, CX, CRX, CRZ, SWAP, RY, Z, T, Y, M };
     // If it passed onto it starts from the index 0. So for initialisation, printCircuit will produce 0.
 
     struct Op {
@@ -118,13 +118,13 @@ class QuantumCircuit {
     void ry(float theta, int q) {
       rx(HALF_PI, q);
       rz(theta, q);
-      rx((-PI) / 2.0, q);
+      rx(-(HALF_PI), q);
     }
 
     // Rotation-Z gate
     void rz(float theta, int q) {
       if (size >= capacity) resize();
-      data[size++] = Op(RZ, theta, 0,q);
+      data[size++] = Op(RZ, theta, 0, q);
     }
 
     // Pauli-Y gate
@@ -147,6 +147,12 @@ class QuantumCircuit {
     void crx(float theta, int s, int t) {
       if (size >= capacity) resize();
       data[size++] = Op(CRX, theta, s, t);
+    }
+
+    // CRZ gate (Control-RZ gate)
+    void crz(float theta, int s, int t) {
+      if (size >= capacity) resize();
+      data[size++] = Op(CRZ, theta, s, t);
     }
 
     // SWAP gate
@@ -182,7 +188,9 @@ class QuantumCircuit {
     // Calculates the statevector for our quantum circuit
     void simulate(QuantumCircuit &qc, int shots = 1024, char* get = "counts", float* noiseModel = nullptr) {
       statevectors = new ComplexNumber[1 << qc.num_qubits];
-      for (int i = 0; i < (1 << qc.num_qubits); i++) {
+      int ssize = 1 << qc.num_qubits;
+
+      for (int i = 0; i < ssize; i++) {
         statevectors[i] = {0.0, 0.0};
       }
       statevectors[0] = {1.0, 0.0}; // Initialise: |0>
@@ -242,13 +250,13 @@ class QuantumCircuit {
         else if (g.gate == QuantumCircuit::RZ) {
           float th = g.angle;
           for (int i0 = 0; i0 < (1 << j); i0++) {
-              for (int i1 = 0; i1 < (1 << (qc.num_qubits - j - 1)); i1++) {
-                  int b0 = i0 + (1 << (j + 1)) * i1;
-                  int b1 = b0 + (1 << j);
-                  ComplexNumber* r = qc.phaseturn(statevectors[b0], statevectors[b1], th);
-                  statevectors[b0] = r[0];
-                  statevectors[b1] = r[1];
-              }
+            for (int i1 = 0; i1 < (1 << (qc.num_qubits - j - 1)); i1++) {
+              int b0 = i0 + (1 << (j + 1)) * i1;
+              int b1 = b0 + (1 << j);
+              ComplexNumber* r = qc.phaseturn(statevectors[b0], statevectors[b1], th);
+              statevectors[b0] = r[0];
+              statevectors[b1] = r[1];
+            }
           }
         }
         else if (g.gate == QuantumCircuit::CX) {
@@ -272,12 +280,83 @@ class QuantumCircuit {
             }
           }
         }
+        else if (g.gate == QuantumCircuit::SWAP) {
+          int c = g.control;
+          int t = g.target;
+
+          int l = min(g.control, g.target);
+          int h = max(g.control, g.target);
+
+          for (int i0 = 0; i0 < (1 << l); i0++) {
+            for (int i1 = 0; i1 < (1 << (h - l - 1)); i1++) {
+              for (int i2 = 0; i2 < (1 << (qc.num_qubits - h - 1)); i2++) {
+                int b00 = i0 + (1 << (l + 1)) * i1 + (1 << (h + 1)) * i2;
+                int b01 = b00 + (1 << t);
+                int b10 = b00 + (1 << c);
+                int b11 = b10 + (1 << t);
+
+                ComplexNumber temp = statevectors[b01];
+                statevectors[b01] = statevectors[b10];
+                statevectors[b10] = temp;
+              }
+            }
+          }
+        }
+        else if (g.gate == QuantumCircuit::CRX) {
+          float th = g.angle;
+
+          int c = g.control;
+          int t = g.target;
+
+          int l = min(g.control, g.target);
+          int h = max(g.control, g.target);
+
+          for (int i0 = 0; i0 < (1 << l); i0++) {
+            for (int i1 = 0; i1 < (1 << (h - l - 1)); i1++) {
+              for (int i2 = 0; i2 < (1 << (qc.num_qubits - h - 1)); i2++) {
+                int b00 = i0 + (1 << (l + 1)) * i1 + (1 << (h + 1)) * i2;
+                int b01 = b00 + (1 << t);
+                int b10 = b00 + (1 << c);
+                int b11 = b10 + (1 << t);
+
+                ComplexNumber* r = qc.rotate(statevectors[b10], statevectors[b11], th);
+                statevectors[b10] = r[0];
+                statevectors[b11] = r[1];
+              }
+            }
+          }
+        }
+        else if (g.gate == QuantumCircuit::CRZ) {
+          float th = g.angle;
+          int c = g.control;
+          int t = g.target;
+
+          int l = min(g.control, g.target);
+          int h = max(g.control, g.target);
+
+          for (int i0 = 0; i0 < (1 << l); i0++) {
+            for (int i1 = 0; i1 < (1 << (h - l - 1)); i1++) {
+              for (int i2 = 0; i2 < (1 << (qc.num_qubits - h - 1)); i2++) {
+                int b00 = i0 + (1 << (l + 1)) * i1 + (1 << (h + 1)) * i2;
+                int b01 = b00 + (1 << t);
+                int b10 = b00 + (1 << c);
+                int b11 = b10 + (1 << t);
+                
+                ComplexNumber* r = qc.phaseturn(statevectors[b10], statevectors[b11], th);
+                statevectors[b10] = r[0];
+                statevectors[b11] = r[1];
+              }
+            }
+          }
+        }
 
         circuitPrint(g.gate);
 
         if (strcmp(get, "statevector") == 0) {
           // already stored statevectors as a member variable
         }
+
+        system_check();
         
       }
 
@@ -311,25 +390,70 @@ class QuantumCircuit {
     ComplexNumber* rotate(ComplexNumber x, ComplexNumber y, float tt) {
       // rotates a qubit by an angle tt(theta)
       static ComplexNumber rotResult[2];
+
       float cos_tt = cos(tt / 2.0);
       float sin_tt = sin(tt / 2.0);
 
       rotResult[0] = ComplexNumber(x.real * cos_tt + y.imag * sin_tt, x.imag * cos_tt - y.real * sin_tt);
       rotResult[1] = ComplexNumber(y.real * cos_tt + x.imag * sin_tt, y.imag * cos_tt - x.real * sin_tt);
 
+      /*
+      Serial.print("+++++++++++++++++++++++++++\n");
+      Serial.print("===========================\n");
+      Serial.print("+++++++++++++++++++++++++++\n");
+      Serial.println(rotResult[0].real);
+      Serial.println(rotResult[0].imag);
+      Serial.println(rotResult[1].real);
+      Serial.print(rotResult[1].imag);
+      Serial.print("+++++++++++++++++++++++++++\n");
+      Serial.print("===========================\n");
+      Serial.print("+++++++++++++++++++++++++++\n");
+      */
+
       return rotResult;
     }
 
     ComplexNumber* phaseturn(ComplexNumber x, ComplexNumber y, float tt) {
       // Phase shift rotation for a qubit by an angle tt(theta)
-      ComplexNumber phaseResult[2];
-      float cos_tt = cos(tt / 2);
-      float sin_tt = sin(tt / 2);
+      static ComplexNumber phaseResult[2];
+      float cos_tt = cos(tt / 2.0);
+      float sin_tt = sin(tt / 2.0);
 
-      phaseResult[0] = ComplexNumber(x.real * cos_tt - x.imag * sin_tt, x.imag * cos_tt + x.real * sin_tt);
-      phaseResult[1] = ComplexNumber(y.real * cos_tt - y.imag * sin_tt, y.imag * cos_tt + y.real * sin_tt);
+      phaseResult[0] = ComplexNumber(x.real * cos_tt - x.imag * sin(-tt / 2.0), x.imag * cos_tt + x.real * sin(-tt / 2.0));
+      phaseResult[1] = ComplexNumber(y.real * cos_tt - y.imag * sin(tt / 2.0), y.imag * cos_tt + y.real * sin(tt / 2.0));
+
+      /*
+      Serial.print("+++++++++++++++++++++++++++\n");
+      Serial.print("===========================\n");
+      Serial.print("+++++++++++++++++++++++++++\n");
+      Serial.println(phaseResult[0].real);
+      Serial.println(phaseResult[0].imag);
+      Serial.println(phaseResult[1].real);
+      Serial.print(phaseResult[1].imag);
+      Serial.print("+++++++++++++++++++++++++++\n");
+      Serial.print("===========================\n");
+      Serial.print("+++++++++++++++++++++++++++\n");
+      */
 
       return phaseResult;
+    }
+    
+    // Calculate the left memory space for Arduino Mega 2560
+    int how_many_memory() {
+      extern int __heap_start, *__brkval;
+      int v;
+      return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval);
+    }
+
+    void system_check() {
+      int ram = how_many_memory();
+      Serial.print("Free memory: ");
+      Serial.println(ram);
+
+      if (ram < 100) {  // Threshold for minimum memory, adjust as needed
+        Serial.println(":::::::Warning:::::::");
+        exit(1); // Stop all execution before frying the board
+      }
     }
 };
 
