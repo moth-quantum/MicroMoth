@@ -23,6 +23,7 @@ Installation guides for the various versions of MicroMoth can be found in the co
 
 * [MicroPython/Python 2/Python 3](versions/Python/README.md)
 * [Lua](versions/Lua/README.md)
+* [Arduino](versions/Arduino/MicroMothArduino.md)
 
 
 ### Template Version
