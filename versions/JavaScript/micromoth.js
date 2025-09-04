@@ -23,7 +23,7 @@ const r2 = 0.70710678118;
 export default class QuantumCircuit {
     #data;
 
-    constructor(n, m) {
+    constructor(n, m=0) {
         this.num_qubits = n;
         this.num_clbits = m;
         this.name = '';
