@@ -372,5 +372,13 @@ function norm(ket) {
     return ket.map((amp) => [amp[0] / n, amp[1] / n]);
 }
 
-export { QuantumCircuit, simulate, rotate, superposition, phaseturn, kron, norm };
-export default QuantumCircuit;
+// Global exports for browser usage (p5.js compatible)
+if (typeof window !== 'undefined') {
+    window.QuantumCircuit = QuantumCircuit;
+    window.simulate = simulate;
+    window.rotate = rotate;
+    window.superposition = superposition;
+    window.phaseturn = phaseturn;
+    window.kron = kron;
+    window.norm = norm;
+}
