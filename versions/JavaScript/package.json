@@ -1,0 +1,13 @@
+{
+  "name": "micromoth-JS",
+  "version": "1.0.0",
+  "description": "",
+  "main": "micromoth.js",
+  "scripts": {
+    "test": "node tests.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module"
+}

@@ -22,7 +22,7 @@ const r2 = Math.SQRT1_2; // 1/sqrt(2) for Hadamard gate
 
 class QuantumCircuit {
     #data;
-
+  
     constructor(n, m = 0) {
         if (!Number.isInteger(n) || n < 1 || n > 20) {
             throw new Error('num_qubits must be an integer between 1 and 20');
@@ -42,10 +42,7 @@ class QuantumCircuit {
         return this.#data;
     }
 
-    initialize(state) {
-        if (!Array.isArray(state) || !Array.isArray(state[0])) {
-            throw new Error("State must be an array of [real, imag] pairs.");
-        }
+    initialize(state) (
         this.#data.push({ gate: "init", state });
         return this;
     }
