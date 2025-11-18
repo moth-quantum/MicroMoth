@@ -20,10 +20,17 @@
 
 const r2 = 0.70710678118;
 
-export default class QuantumCircuit {
+class QuantumCircuit {
     #data;
 
-    constructor(n, m) {
+    constructor(n, m = 0) {
+        if (!Number.isInteger(n) || n < 1 || n > 20) {
+            throw new Error('num_qubits must be an integer between 1 and 20');
+        }
+        if (!Number.isInteger(m) || m < 0) {
+            throw new Error('num_clbits must be a non-negative integer');
+        }
+        
         this.num_qubits = n;
         this.num_clbits = m;
         this.name = '';
@@ -99,27 +106,31 @@ export default class QuantumCircuit {
     // T gate
     t(q) {
         this.rz(Math.PI / 4, q);
+        return this;
     };
 
     crx(theta, s, t) {
         this.#data.push(['crx', theta, s, t]);
+        return this;
     };
 
     crz(theta, s, t) {
         this.#data.push(['crz', theta, s, t]);
+        return this;
     }; 
     
     swap(s, t) {
         this.#data.push(['swap', s, t]);
+        return this;
     };
 
     measure(q, b) {
         if (q >= this.num_qubits) {
-            throw 'Select the right index of qubits.';
+            throw new Error(`Qubit index ${q} out of range. Must be < ${this.num_qubits}`);
         }
 
         if (b >= this.num_clbits) {
-            throw 'Select the right index of classical bits.';
+            throw new Error(`Classical bit index ${b} out of range. Must be < ${this.num_clbits}`);
         }
 
         this.#data.push(['m', q, b]);
@@ -139,7 +150,15 @@ function simulate(qc, shots = 1024, get = 'counts', noise_model = []) {
     const nc = qc.num_clbits;
     const d = qc.getData();
 
-    let state = Array(2 ** nq).fill([0, 0]);
+    // Validate simulation constraints
+    if (nq > 20) {
+        console.warn(`Warning: Simulating ${nq} qubits requires ${Math.pow(2, nq).toLocaleString()} state amplitudes. This may cause performance issues or crash.`);
+    }
+    if (nq > 25) {
+        throw new Error(`Cannot simulate ${nq} qubits (requires ${Math.pow(2, nq).toLocaleString()} state amplitudes). Maximum recommended: 20 qubits.`);
+    }
+
+    let state = Array(2 ** nq).fill(null).map(() => [0, 0]);
     state[0] = [1, 0]; // a |000...000> statevector
 
     if (!Array.isArray(noise_model)) {
@@ -250,10 +269,13 @@ function simulate(qc, shots = 1024, get = 'counts', noise_model = []) {
     }
 
     let results = [];
+    const outIndices = Object.keys(outmap).map(Number);
+    const hasMapping = outIndices.length > 0;
+
     for (let _ = 0; _ < shots; _++) {
         let r = Math.random();
         let cumu = 0;
-        let chosen = null;
+        let chosen = 0;
 
         for (let j = 0; j < probs.length; j++) {
             cumu += probs[j];
@@ -263,12 +285,16 @@ function simulate(qc, shots = 1024, get = 'counts', noise_model = []) {
             }
         }
 
-        const raw = chosen.toString(2).padStart(nq, '0');
-        const out_arr = Array(nc).fill('0');
-        for (let bit in outmap) {
-            out_arr[nc - 1 - parseInt(bit)] = raw[nq - 1 - outmap[bit]];
+        if (hasMapping) {
+            const raw = chosen.toString(2).padStart(nq, '0');
+            let out_arr = Array(nc).fill('0');
+            for (let bit of outIndices) {
+                out_arr[nc - 1 - bit] = raw[nq - 1 - outmap[bit]];
+            }
+            results.push(out_arr.join(''));
+        } else {
+            results.push(chosen.toString(2).padStart(nc || nq, '0'));
         }
-        results.push(out_arr.join(''));
     }
 
     if (get == 'memory') return results; // accumulated step-by-step changes
@@ -293,8 +319,8 @@ function rotate(x, y, theta) {
 
 function superposition(x, y) {
     return [
-        [r2 * (x[0] + y[0]), r2 * (x[1] + y[1])],
-        [r2 * (x[0] - y[0]), r2 * (x[1] - y[1])]
+        [SQRT_1_2 * (x[0] + y[0]), SQRT_1_2 * (x[1] + y[1])],
+        [SQRT_1_2 * (x[0] - y[0]), SQRT_1_2 * (x[1] - y[1])]
     ]
 };
 
@@ -328,4 +354,5 @@ function norm(ket) {
     return ket.map((amp) => [amp[0] / n, amp[1] / n]);
 }
 
-export { simulate, rotate, superposition, phaseturn, kron, norm };
+export { QuantumCircuit, simulate, rotate, superposition, phaseturn, kron, norm };
+export default QuantumCircuit;
