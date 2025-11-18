@@ -18,12 +18,19 @@
 // copyright notice, and modified files need to carry a notice indicating
 // that they have been altered from the originals.
 
-const r2 = 0.70710678118;
+const r2 = Math.SQRT1_2; // 1/sqrt(2) for Hadamard gate
 
-export default class QuantumCircuit {
+class QuantumCircuit {
     #data;
-
-    constructor(n, m=0) {
+  
+    constructor(n, m = 0) {
+        if (!Number.isInteger(n) || n < 1 || n > 20) {
+            throw new Error('num_qubits must be an integer between 1 and 20');
+        }
+        if (!Number.isInteger(m) || m < 0) {
+            throw new Error('num_clbits must be a non-negative integer');
+        }
+        
         this.num_qubits = n;
         this.num_clbits = m;
         this.name = '';
@@ -35,10 +42,7 @@ export default class QuantumCircuit {
         return this.#data;
     }
 
-    initialize(state) {
-        if (!Array.isArray(state) || !Array.isArray(state[0])) {
-            throw new Error("State must be an array of [real, imag] pairs.");
-        }
+    initialize(state) (
         this.#data.push({ gate: "init", state });
         return this;
     }
@@ -99,27 +103,31 @@ export default class QuantumCircuit {
     // T gate
     t(q) {
         this.rz(Math.PI / 4, q);
+        return this;
     };
 
     crx(theta, s, t) {
         this.#data.push(['crx', theta, s, t]);
+        return this;
     };
 
     crz(theta, s, t) {
         this.#data.push(['crz', theta, s, t]);
+        return this;
     }; 
     
     swap(s, t) {
         this.#data.push(['swap', s, t]);
+        return this;
     };
 
     measure(q, b) {
         if (q >= this.num_qubits) {
-            throw 'Select the right index of qubits.';
+            throw new Error(`Qubit index ${q} out of range. Must be < ${this.num_qubits}`);
         }
 
         if (b >= this.num_clbits) {
-            throw 'Select the right index of classical bits.';
+            throw new Error(`Classical bit index ${b} out of range. Must be < ${this.num_clbits}`);
         }
 
         this.#data.push(['m', q, b]);
@@ -139,7 +147,15 @@ function simulate(qc, shots = 1024, get = 'counts', noise_model = []) {
     const nc = qc.num_clbits;
     const d = qc.getData();
 
-    let state = Array(2 ** nq).fill([0, 0]);
+    // Limitation
+    if (nq > 20) {
+        console.warn(`Warning: Simulating ${nq} qubits requires ${Math.pow(2, nq).toLocaleString()} state amplitudes. This may cause performance issues or crash.`);
+    }
+    if (nq > 25) {
+        throw new Error(`Cannot simulate ${nq} qubits (requires ${Math.pow(2, nq).toLocaleString()} state amplitudes). Maximum recommended: 20 qubits.`);
+    }
+
+    let state = Array(2 ** nq).fill(null).map(() => [0, 0]);
     state[0] = [1, 0]; // a |000...000> statevector
 
     if (!Array.isArray(noise_model)) {
@@ -174,11 +190,14 @@ function simulate(qc, shots = 1024, get = 'counts', noise_model = []) {
         }
         else if (['x', 'h', 'rx', 'rz'].includes(op)) {
             const j = args[args.length - 1];
-
-            for (let i0 = 0; i0 < 2 ** j; i0++) {
-                for (let i1 = 0; i1 < 2 ** (nq - j - 1); i1++) {
-                    const b0 = i0 + 2 ** (j + 1) * i1;
-                    const b1 = b0 + 2 ** j;
+            const mask = 1 << j;
+            const step = 1 << (j + 1);
+            
+            // Nested loops to single iteration
+            for (let i = 0; i < (1 << nq); i += step) {
+                for (let k = 0; k < mask; k++) {
+                    const b0 = i + k;
+                    const b1 = b0 + mask;
 
                     if (op == 'x') {
                         [state[b0], state[b1]] = [state[b1], state[b0]];
@@ -199,20 +218,28 @@ function simulate(qc, shots = 1024, get = 'counts', noise_model = []) {
             const theta = (op == 'crx') ? args[0] : null;
             const [s, t] = (op == 'crx') ? args.slice(1) : args;
             const [l, h] = [Math.min(s, t), Math.max(s, t)];
+            
+            // Cache bit shifts for performance
+            const mask_l = 1 << l;
+            const mask_s = 1 << s;
+            const mask_t = 1 << t;
+            const step_l = 1 << (l + 1);
+            const step_h = 1 << (h + 1);
 
-            for (let i0 = 0; i0 < 2 ** l; i0++) {
-                for (let i1 = 0; i1 < 2 ** (h - l - 1); i1++) {
-                    for (let i2 = 0; i2 < 2 ** (nq - h - 1); i2++) {
-                        const b00 = i0 + 2 ** (l + 1) * i1 + 2 ** (h + 1) * i2;
-                        const b01 = b00 + 2 ** t;
-                        const b10 = b00 + 2 ** s;
-                        const b11 = b10 + 2 ** t;
+            // Iteration with cached masks
+            for (let i = 0; i < (1 << nq); i += step_h) {
+                for (let j = 0; j < (1 << h); j += step_l) {
+                    for (let k = 0; k < mask_l; k++) {
+                        const b00 = i + j + k;
+                        const b01 = b00 + mask_t;
+                        const b10 = b00 + mask_s;
+                        const b11 = b10 + mask_t;
 
                         if (op == 'cx') {
-                        [state[b10], state[b11]] = [state[b11], state[b10]];
+                            [state[b10], state[b11]] = [state[b11], state[b10]];
                         }
                         else if (op == 'crx') {
-                        [state[b10], state[b11]] = rotate(state[b10], state[b11], theta);
+                            [state[b10], state[b11]] = rotate(state[b10], state[b11], theta);
                         }
                         else if (op == 'swap') {
                             [state[b01], state[b10]] = [state[b10], state[b01]];
@@ -231,13 +258,20 @@ function simulate(qc, shots = 1024, get = 'counts', noise_model = []) {
     if (noise_model.length > 0) {
         for (let j = 0; j < nq; j++) {
             const p = noise_model[j];
-            for (let i0 = 0; i0 < 2 ** j; i0++) {
-                for (let i1 = 0; i1 < 2 ** (nq - j - 1); i1++) {
-                    const b0 = i0 + 2 ** (j + 1) * i1;
-                    const b1 = b0 + 2 ** j;
+            if (p === 0) continue; // Skip if no noise on this qubit
+            
+            const mask = 1 << j;
+            const step = 1 << (j + 1);
+            const p0_coeff = 1 - p;
+            
+            // Reduced nested loop with bit manipulation
+            for (let i = 0; i < (1 << nq); i += step) {
+                for (let k = 0; k < mask; k++) {
+                    const b0 = i + k;
+                    const b1 = b0 + mask;
                     const p0 = probs[b0], p1 = probs[b1];
-                    probs[b0] = (1 - p) * p0 + p * p1;
-                    probs[b1] = (1 - p) * p1 + p * p0;
+                    probs[b0] = p0_coeff * p0 + p * p1;
+                    probs[b1] = p0_coeff * p1 + p * p0;
                 }
             }
          }
@@ -250,10 +284,13 @@ function simulate(qc, shots = 1024, get = 'counts', noise_model = []) {
     }
 
     let results = [];
+    const outIndices = Object.keys(outmap).map(Number);
+    const hasMapping = outIndices.length > 0;
+
     for (let _ = 0; _ < shots; _++) {
         let r = Math.random();
         let cumu = 0;
-        let chosen = null;
+        let chosen = 0;
 
         for (let j = 0; j < probs.length; j++) {
             cumu += probs[j];
@@ -263,15 +300,19 @@ function simulate(qc, shots = 1024, get = 'counts', noise_model = []) {
             }
         }
 
-        const raw = chosen.toString(2).padStart(nq, '0');
-        const out_arr = Array(nc).fill('0');
-        for (let bit in outmap) {
-            out_arr[nc - 1 - parseInt(bit)] = raw[nq - 1 - outmap[bit]];
+        if (hasMapping) {
+            const raw = chosen.toString(2).padStart(nq, '0');
+            let out_arr = Array(nc).fill('0');
+            for (let bit of outIndices) {
+                out_arr[nc - 1 - bit] = raw[nq - 1 - outmap[bit]];
+            }
+            results.push(out_arr.join(''));
+        } else {
+            results.push(chosen.toString(2).padStart(nc || nq, '0'));
         }
-        results.push(out_arr.join(''));
     }
 
-    if (get == 'memory') return results; // accumulated step-by-step changes
+    if (get == 'memory') return results; // accumulating changes
 
     const counts = {};
     for (let res of results) {
@@ -328,4 +369,13 @@ function norm(ket) {
     return ket.map((amp) => [amp[0] / n, amp[1] / n]);
 }
 
-export { simulate, rotate, superposition, phaseturn, kron, norm };
+// Global exports for browser usage (p5.js compatible)
+if (typeof window !== 'undefined') {
+    window.QuantumCircuit = QuantumCircuit;
+    window.simulate = simulate;
+    window.rotate = rotate;
+    window.superposition = superposition;
+    window.phaseturn = phaseturn;
+    window.kron = kron;
+    window.norm = norm;
+}
