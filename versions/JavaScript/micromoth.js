@@ -18,7 +18,7 @@
 // copyright notice, and modified files need to carry a notice indicating
 // that they have been altered from the originals.
 
-const r2 = 0.70710678118;
+const r2 = Math.SQRT1_2; // 1/sqrt(2) for Hadamard gate
 
 class QuantumCircuit {
     #data;
