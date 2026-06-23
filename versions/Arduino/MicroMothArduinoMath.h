@@ -27,8 +27,10 @@ static constexpr float r2 = 0.707106781f; // 1/sqrt(2), constexpr avoids ODR vio
 
 float custom_random(double minFloat, double maxFloat)
 {
-  // using bitshift left (<<) for the operation
-  return minFloat + random(1UL << 31) * (maxFloat - minFloat) / (1UL << 31);  // half double max values. 63 for max values
+  // 1UL<<31 overflows signed long on AVR (wraps to -2147483648); Arduino random() returns 0
+  // for non-positive arguments, collapsing the entire range to 0.  Use a bound that fits
+  // safely in a positive signed long; result is in [0, 1) so CDF sampling is correct.
+  return (float)(minFloat + (float)random(1000000L) * (maxFloat - minFloat) / 1000000.0f);
 }
 
 struct ComplexNumber {

@@ -166,13 +166,18 @@ class QuantumCircuit {
     void simulate(QuantumCircuit &qc, int shots = 1024, const char* get = "counts", const float* noiseModel = nullptr) {
       int ssize = 1 << qc.num_qubits;
 
-      // Fix 6+7: memory check BEFORE allocating statevectors
+      // Free stale allocation first so system_check sees accurately-available RAM
+      delete[] statevectors;
+      statevectors = nullptr;
+
       int required = (int)(sizeof(ComplexNumber) * ssize) + 200;
       system_check(required);
 
-      // Fix 8: free previous allocation before re-allocating
-      delete[] statevectors;
       statevectors = new ComplexNumber[ssize];
+      if (!statevectors) {
+        Serial.println(F("Error: out of memory (statevectors)"));
+        return;
+      }
 
       for (int i = 0; i < ssize; i++) {
         statevectors[i] = {0.0f, 0.0f};
@@ -182,6 +187,10 @@ class QuantumCircuit {
       // Fix 3: pre-scan to build outputmap (clbit -> qubit) from M ops
       int clbits = (qc.num_clbits > 0) ? qc.num_clbits : 1;
       int* outputmap = new int[clbits];
+      if (!outputmap) {
+        Serial.println(F("Error: out of memory (outputmap)"));
+        return;
+      }
       for (int i = 0; i < clbits; i++) outputmap[i] = -1;
       for (int i = 0; i < qc.size; i++) {
         if (qc.data[i].gate == QuantumCircuit::M) {
@@ -335,6 +344,11 @@ class QuantumCircuit {
 
       // Fix 3: compute probabilities from statevector
       float* probs = new float[ssize];
+      if (!probs) {
+        Serial.println(F("Error: out of memory (probs)"));
+        delete[] outputmap;
+        return;
+      }
       for (int i = 0; i < ssize; i++) {
         probs[i] = statevectors[i].real * statevectors[i].real + statevectors[i].imag * statevectors[i].imag;
       }
@@ -360,6 +374,12 @@ class QuantumCircuit {
       if (strcmp(get, "counts") == 0 || strcmp(get, "memory") == 0) {
         int num_cstates = 1 << qc.num_clbits;
         int* counts = new int[num_cstates];
+        if (!counts) {
+          Serial.println(F("Error: out of memory (counts)"));
+          delete[] probs;
+          delete[] outputmap;
+          return;
+        }
         for (int i = 0; i < num_cstates; i++) counts[i] = 0;
 
         for (int shot = 0; shot < shots; shot++) {
