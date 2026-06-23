@@ -17,43 +17,34 @@
 // Any modifications or derivative works of this code must retain this
 // copyright notice, and modified files need to carry a notice indicating
 // that they have been altered from the originals.
+
 #include <stdint.h>
 #include <avr/wdt.h>
 #include <avr/interrupt.h>
 
 #include "MicroMothArduino.h"
-QuantumCircuit qc(2); // 2 qubits
 
-// double r2 = 1 / sqrt(2.0);
-// (for .h) double r2 = 0.707106781; // modified for Arduino
+QuantumCircuit qc(2); // 2 qubits, 0 classical bits (measure_all will set to 2)
 
+// Bell state demo: h(0), cx(0,1), measure_all(), 64 shots
+// Expected output: ~50% "00" and ~50% "11"
 void test() {
-  // int init_state[] = {0};
-  qc.initialise(new int[1]{0}, 1);
+  // Fix 9: use stack-allocated array instead of new int[1]{0}
+  int init_state[1] = {0};
+  qc.initialise(init_state, 1);
 
   qc.h(0);
-  qc.x(1);
-  
-  // qc.measure_all();
+  qc.cx(0, 1);
+  qc.measure_all();
 
-  qc.simulate(qc, 1024, "statevector");
-
-  // ComplexNumber* states = qc.statevectors;
-  
-  // qc.circuitPrint();
-  
+  qc.simulate(qc, 64, "counts");
 }
 
 void setup() {
-  // put your setup code here, to run once:
   Serial.begin(115200);
-  // Serial.println(r2, 11); // In Arduino, r2 = 0.707106781, based on the result.
-  // Serial.print() prints two decimals ONLY.
-  // Serial.println(PI, 11); // PI is defined in arduino.h
   test();
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  // Serial.println(custom_random(0.00, 1.00), 11); // 8 for float, 11 for double
 }

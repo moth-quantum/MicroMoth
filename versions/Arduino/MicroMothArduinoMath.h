@@ -23,7 +23,7 @@
 
 #include <Arduino.h>
 
-float r2 = 0.707106781; // modified for Arduino 
+static constexpr float r2 = 0.707106781f; // 1/sqrt(2), constexpr avoids ODR violation when included in multiple TUs
 
 float custom_random(double minFloat, double maxFloat)
 {
