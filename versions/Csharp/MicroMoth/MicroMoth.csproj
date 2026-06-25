@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <PackageId>Moth.MicroMoth</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>Astryd Park</Authors>
+    <Company>Moth</Company>
+
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <Description>Lightweight Quantum computing library for Csharp projects.</Description>
+
+    
+  </PropertyGroup>
+
+</Project>
