@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/Users/astrydpark/work/GitHub/MicroMoth/versions/Csharp/MicroMoth/MicroMoth.csproj": {}
+    "/Users/astrydpark/work/GitHub/micromoth/versions/Csharp/MicroMoth/MicroMoth.csproj": {}
   },
   "projects": {
-    "/Users/astrydpark/work/GitHub/MicroMoth/versions/Csharp/MicroMoth/MicroMoth.csproj": {
+    "/Users/astrydpark/work/GitHub/micromoth/versions/Csharp/MicroMoth/MicroMoth.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/astrydpark/work/GitHub/MicroMoth/versions/Csharp/MicroMoth/MicroMoth.csproj",
+        "projectUniqueName": "/Users/astrydpark/work/GitHub/micromoth/versions/Csharp/MicroMoth/MicroMoth.csproj",
         "projectName": "Moth.MicroMoth",
-        "projectPath": "/Users/astrydpark/work/GitHub/MicroMoth/versions/Csharp/MicroMoth/MicroMoth.csproj",
+        "projectPath": "/Users/astrydpark/work/GitHub/micromoth/versions/Csharp/MicroMoth/MicroMoth.csproj",
         "packagesPath": "/Users/astrydpark/.nuget/packages/",
-        "outputPath": "/Users/astrydpark/work/GitHub/MicroMoth/versions/Csharp/MicroMoth/obj/",
+        "outputPath": "/Users/astrydpark/work/GitHub/micromoth/versions/Csharp/MicroMoth/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/Users/astrydpark/.nuget/NuGet/NuGet.Config"

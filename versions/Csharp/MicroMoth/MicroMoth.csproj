@@ -12,8 +12,7 @@
 
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <Description>Lightweight Quantum computing library for Csharp projects.</Description>
-
-    
+    <PackageTags>quantum;qiskit;micromoth;godot;simulator</PackageTags>
   </PropertyGroup>
 
 </Project>
