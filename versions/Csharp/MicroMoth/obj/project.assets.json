@@ -11,7 +11,7 @@
     "/Users/astrydpark/.nuget/packages/": {}
   },
   "project": {
-    "version": "1.0.0",
+    "version": "1.0.1",
     "restore": {
       "projectUniqueName": "/Users/astrydpark/work/GitHub/MicroMoth/versions/Csharp/MicroMoth/MicroMoth.csproj",
       "projectName": "Moth.MicroMoth",
