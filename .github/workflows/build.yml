@@ -1,0 +1,42 @@
+name: Micromoth for C#
+
+# Publish manually from the Actions tab, or automatically when you publish a GitHub Release.
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write             # required: lets GitHub issue the OIDC token NuGet verifies
+      contents: read              # required: a permissions block resets the rest, so checkout needs this
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Test (smoke gate — broken build can't publish)
+        run: dotnet run --project versions/Csharp/Tests -c Release
+
+      - name: Pack
+        run: dotnet pack versions/Csharp/MicroMoth/MicroMoth.csproj -c Release -o artifacts
+
+      # Exchange the OIDC token for a short-lived NuGet API key (Trusted Publishing).
+      - name: NuGet login (OIDC -> temporary API key)
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: astryd-moth        # your nuget.org username (the package owner), NOT your email
+
+      - name: NuGet push
+        run: >
+          dotnet nuget push "artifacts/*.nupkg"
+          --api-key ${{ steps.login.outputs.NUGET_API_KEY }}
+          --source https://api.nuget.org/v3/index.json
+          --skip-duplicate

@@ -1,0 +1,111 @@
+{
+  "version": 4,
+  "targets": {
+    "net8.0": {
+      "Moth.MicroMoth/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v8.0",
+        "compile": {
+          "bin/placeholder/Moth.MicroMoth.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/Moth.MicroMoth.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "Moth.MicroMoth/1.0.0": {
+      "type": "project",
+      "path": "../MicroMoth/MicroMoth.csproj",
+      "msbuildProject": "../MicroMoth/MicroMoth.csproj"
+    }
+  },
+  "projectFileDependencyGroups": {
+    "net8.0": [
+      "Moth.MicroMoth >= 1.0.0"
+    ]
+  },
+  "packageFolders": {
+    "/Users/astrydpark/.nuget/packages/": {}
+  },
+  "project": {
+    "version": "1.0.0",
+    "restore": {
+      "projectUniqueName": "/Users/astrydpark/work/GitHub/MicroMoth/versions/Csharp/Tests/Tests.csproj",
+      "projectName": "Tests",
+      "projectPath": "/Users/astrydpark/work/GitHub/MicroMoth/versions/Csharp/Tests/Tests.csproj",
+      "packagesPath": "/Users/astrydpark/.nuget/packages/",
+      "outputPath": "/Users/astrydpark/work/GitHub/MicroMoth/versions/Csharp/Tests/obj/",
+      "projectStyle": "PackageReference",
+      "configFilePaths": [
+        "/Users/astrydpark/.nuget/NuGet/NuGet.Config"
+      ],
+      "originalTargetFrameworks": [
+        "net8.0"
+      ],
+      "sources": {
+        "https://api.nuget.org/v3/index.json": {}
+      },
+      "frameworks": {
+        "net8.0": {
+          "framework": "net8.0",
+          "targetAlias": "net8.0",
+          "projectReferences": {
+            "/Users/astrydpark/work/GitHub/MicroMoth/versions/Csharp/MicroMoth/MicroMoth.csproj": {
+              "projectPath": "/Users/astrydpark/work/GitHub/MicroMoth/versions/Csharp/MicroMoth/MicroMoth.csproj"
+            }
+          }
+        }
+      },
+      "warningProperties": {
+        "warnAsError": [
+          "NU1605"
+        ]
+      },
+      "restoreAuditProperties": {
+        "enableAudit": "true",
+        "auditLevel": "low",
+        "auditMode": "direct"
+      },
+      "SdkAnalysisLevel": "10.0.300"
+    },
+    "frameworks": {
+      "net8.0": {
+        "framework": "net8.0",
+        "targetAlias": "net8.0",
+        "imports": [
+          "net461",
+          "net462",
+          "net47",
+          "net471",
+          "net472",
+          "net48",
+          "net481"
+        ],
+        "assetTargetFallback": true,
+        "warn": true,
+        "downloadDependencies": [
+          {
+            "name": "Microsoft.AspNetCore.App.Ref",
+            "version": "[8.0.28, 8.0.28]"
+          },
+          {
+            "name": "Microsoft.NETCore.App.Host.osx-arm64",
+            "version": "[8.0.28, 8.0.28]"
+          },
+          {
+            "name": "Microsoft.NETCore.App.Ref",
+            "version": "[8.0.28, 8.0.28]"
+          }
+        ],
+        "frameworkReferences": {
+          "Microsoft.NETCore.App": {
+            "privateAssets": "all"
+          }
+        },
+        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/10.0.301/PortableRuntimeIdentifierGraph.json"
+      }
+    }
+  }
+}
