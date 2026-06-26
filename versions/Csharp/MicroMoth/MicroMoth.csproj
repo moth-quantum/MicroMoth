@@ -5,14 +5,17 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 
+    
+    <AssemblyName>Moth.MicroMoth</AssemblyName>
+
     <PackageId>Moth.MicroMoth</PackageId>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
     <Authors>Astryd Park</Authors>
     <Company>Moth</Company>
 
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <Description>Lightweight Quantum computing library for Csharp projects.</Description>
-    <PackageTags>quantum;qiskit;micromoth;godot;simulator</PackageTags>
+    <PackageTags>quantumcomputing;micromoth;quantum;</PackageTags>
   </PropertyGroup>
 
 </Project>
