@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "zilypNIHU8g=",
+  "success": true,
+  "projectFilePath": "/Users/astrydpark/work/GitHub/MicroMoth/versions/Csharp/MicroMoth/MicroMoth.csproj",
+  "expectedPackageFiles": [
+    "/Users/astrydpark/.nuget/packages/microsoft.netcore.app.ref/8.0.28/microsoft.netcore.app.ref.8.0.28.nupkg.sha512",
+    "/Users/astrydpark/.nuget/packages/microsoft.aspnetcore.app.ref/8.0.28/microsoft.aspnetcore.app.ref.8.0.28.nupkg.sha512"
+  ],
+  "logs": []
+}

@@ -1,0 +1,13 @@
+/Users/astrydpark/work/GitHub/MicroMoth/versions/Csharp/MicroMoth/bin/Debug/net8.0/MicroMoth.deps.json
+/Users/astrydpark/work/GitHub/MicroMoth/versions/Csharp/MicroMoth/bin/Debug/net8.0/MicroMoth.dll
+/Users/astrydpark/work/GitHub/MicroMoth/versions/Csharp/MicroMoth/bin/Debug/net8.0/MicroMoth.pdb
+/Users/astrydpark/work/GitHub/MicroMoth/versions/Csharp/MicroMoth/obj/Debug/net8.0/MicroMoth.csproj.AssemblyReference.cache
+/Users/astrydpark/work/GitHub/MicroMoth/versions/Csharp/MicroMoth/obj/Debug/net8.0/MicroMoth.GeneratedMSBuildEditorConfig.editorconfig
+/Users/astrydpark/work/GitHub/MicroMoth/versions/Csharp/MicroMoth/obj/Debug/net8.0/MicroMoth.AssemblyInfoInputs.cache
+/Users/astrydpark/work/GitHub/MicroMoth/versions/Csharp/MicroMoth/obj/Debug/net8.0/MicroMoth.AssemblyInfo.cs
+/Users/astrydpark/work/GitHub/MicroMoth/versions/Csharp/MicroMoth/obj/Debug/net8.0/MicroMoth.csproj.CoreCompileInputs.cache
+/Users/astrydpark/work/GitHub/MicroMoth/versions/Csharp/MicroMoth/obj/Debug/net8.0/MicroMoth.sourcelink.json
+/Users/astrydpark/work/GitHub/MicroMoth/versions/Csharp/MicroMoth/obj/Debug/net8.0/MicroMoth.dll
+/Users/astrydpark/work/GitHub/MicroMoth/versions/Csharp/MicroMoth/obj/Debug/net8.0/refint/MicroMoth.dll
+/Users/astrydpark/work/GitHub/MicroMoth/versions/Csharp/MicroMoth/obj/Debug/net8.0/MicroMoth.pdb
+/Users/astrydpark/work/GitHub/MicroMoth/versions/Csharp/MicroMoth/obj/Debug/net8.0/ref/MicroMoth.dll
