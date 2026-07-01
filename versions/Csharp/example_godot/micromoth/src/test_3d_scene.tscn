@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://bu60lqyo34ovr"]
+
+[ext_resource type="Script" uid="uid://cnxa4mbyuvimb" path="res://src/MicroMoth.cs" id="1_yqgde"]
+
+[node name="Node3D" type="Node3D" unique_id=1715029326]
+script = ExtResource("1_yqgde")

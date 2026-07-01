@@ -1,0 +1,23 @@
+is_global = true
+build_property.GodotDisabledSourceGenerators = 
+build_property.GodotProjectDir = /Users/astrydpark/work/GitHub/MicroMoth/versions/Csharp/example_godot/micromoth/
+build_property.GodotProjectDirBase64 = L1VzZXJzL2FzdHJ5ZHBhcmsvd29yay9HaXRIdWIvTWljcm9Nb3RoL3ZlcnNpb25zL0NzaGFycC9leGFtcGxlX2dvZG90L21pY3JvbW90aC8=
+build_property.GodotSourceGenerators = 
+build_property.IsGodotToolsProject = 
+build_property.TargetFramework = net8.0
+build_property.TargetFrameworkIdentifier = .NETCoreApp
+build_property.TargetFrameworkVersion = v8.0
+build_property.TargetPlatformMinVersion = 
+build_property.UsingMicrosoftNETSdkWeb = 
+build_property.ProjectTypeGuids = 
+build_property.InvariantGlobalization = 
+build_property.PlatformNeutralAssembly = 
+build_property.EnforceExtendedAnalyzerRules = 
+build_property.EntryPointFilePath = 
+build_property._SupportedPlatformList = Linux,macOS,Windows
+build_property.RootNamespace = micromoth
+build_property.ProjectDir = /Users/astrydpark/work/GitHub/MicroMoth/versions/Csharp/example_godot/micromoth/
+build_property.EnableComHosting = 
+build_property.EnableGeneratedComInterfaceComImportInterop = 
+build_property.EffectiveAnalysisLevelStyle = 8.0
+build_property.EnableCodeStyleSeverity = 

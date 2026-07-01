@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "dgSpecHash": "F1m68W675L4=",
+  "success": true,
+  "projectFilePath": "/Users/astrydpark/work/GitHub/MicroMoth/versions/Csharp/example_godot/micromoth/micromoth.csproj",
+  "expectedPackageFiles": [
+    "/Users/astrydpark/.nuget/packages/godot.sourcegenerators/4.7.0/godot.sourcegenerators.4.7.0.nupkg.sha512",
+    "/Users/astrydpark/.nuget/packages/godotsharp/4.7.0/godotsharp.4.7.0.nupkg.sha512",
+    "/Users/astrydpark/.nuget/packages/godotsharpeditor/4.7.0/godotsharpeditor.4.7.0.nupkg.sha512",
+    "/Users/astrydpark/.nuget/packages/moth.micromoth/1.0.1/moth.micromoth.1.0.1.nupkg.sha512",
+    "/Users/astrydpark/.nuget/packages/microsoft.netcore.app.ref/8.0.28/microsoft.netcore.app.ref.8.0.28.nupkg.sha512",
+    "/Users/astrydpark/.nuget/packages/microsoft.aspnetcore.app.ref/8.0.28/microsoft.aspnetcore.app.ref.8.0.28.nupkg.sha512"
+  ],
+  "logs": []
+}

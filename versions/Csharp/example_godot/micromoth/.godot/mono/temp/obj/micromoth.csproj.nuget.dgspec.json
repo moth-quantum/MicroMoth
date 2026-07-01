@@ -1,0 +1,101 @@
+{
+  "format": 1,
+  "restore": {
+    "/Users/astrydpark/work/GitHub/MicroMoth/versions/Csharp/example_godot/micromoth/micromoth.csproj": {}
+  },
+  "projects": {
+    "/Users/astrydpark/work/GitHub/MicroMoth/versions/Csharp/example_godot/micromoth/micromoth.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Users/astrydpark/work/GitHub/MicroMoth/versions/Csharp/example_godot/micromoth/micromoth.csproj",
+        "projectName": "micromoth",
+        "projectPath": "/Users/astrydpark/work/GitHub/MicroMoth/versions/Csharp/example_godot/micromoth/micromoth.csproj",
+        "packagesPath": "/Users/astrydpark/.nuget/packages/",
+        "outputPath": "/Users/astrydpark/work/GitHub/MicroMoth/versions/Csharp/example_godot/micromoth/.godot/mono/temp/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/Users/astrydpark/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "framework": "net8.0",
+            "targetAlias": "net8.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "10.0.300"
+      },
+      "frameworks": {
+        "net8.0": {
+          "framework": "net8.0",
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "Godot.SourceGenerators": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[4.7.0, )",
+              "autoReferenced": true
+            },
+            "GodotSharp": {
+              "target": "Package",
+              "version": "[4.7.0, )",
+              "autoReferenced": true
+            },
+            "GodotSharpEditor": {
+              "target": "Package",
+              "version": "[4.7.0, )",
+              "autoReferenced": true
+            },
+            "Moth.MicroMoth": {
+              "target": "Package",
+              "version": "[1.0.1, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[8.0.28, 8.0.28]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Ref",
+              "version": "[8.0.28, 8.0.28]"
+            }
+          ],
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/10.0.301/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}
