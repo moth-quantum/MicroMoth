@@ -78,5 +78,28 @@ bool Approx(double a, double b, double tol = 1e-9) => Math.Abs(a - b) < tol;
         Simulator.Counts(qc, 500, seed: 7).SequenceEqual(Simulator.Counts(qc, 500, seed: 7)));
 }
 
+// composition vs serialisation
+{
+    var a = new QuantumCircuit(2).H(0);
+    var b = new QuantumCircuit(2).Cx(0, 1);
+    var composed = a.Compose(b);
+
+    var expected = Simulator.Statevector(new QuantumCircuit(2).H(0).Cx(0, 1));
+    var outcome = Simulator.Statevector(composed);
+
+    bool isSame = true;
+    for (int j = 0; j < expected.Length; j++) isSame &= Approx((outcome[j] - expected[j]).Magnitude, 0);
+
+    Check("Compose: matches sequential gates", isSame);
+    Check("Compose: operands untouched", a.Data.Count == 1 && b.Data.Count == 1);
+    Check("Compose: name comes from left operand", composed.Name == a.Name);
+}
+
+// operator + testing: Is it doing the composition well?
+{
+    var sum = new QuantumCircuit(1).X(0) + new QuantumCircuit(1).X(0);
+    Check("operator +: X then X returns to |0>", Approx(Simulator.Statevector(sum)[0].Magnitude, 1));
+}
+
 Console.WriteLine(failures == 0 ? "\nAll smoke tests passed." : $"\n{failures} test(s) FAILED.");
 return failures == 0 ? 0 : 1;

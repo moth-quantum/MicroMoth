@@ -21,7 +21,8 @@ public sealed class QuantumCircuit
     public int Qubits { get; }
     public int Clbits { get; private set; }
     public string Name { get; set; } = "";
-    public List<Gate> Data { get; } = new();
+    private readonly List<Gate> _data = new();
+    public IReadOnlyList<Gate> Data => _data; // Prevent the data leak
 
     public QuantumCircuit(int n, int m = 0)
     {
@@ -32,13 +33,13 @@ public sealed class QuantumCircuit
     }
 
     // ===== Basic of the basics =====
-    public QuantumCircuit X(int q)            { Data.Add(new Gate(GateOp.X, A: q)); return this; }
-    public QuantumCircuit H(int q)            { Data.Add(new Gate(GateOp.H, A: q)); return this; }
-    public QuantumCircuit Rx(double th, int q){ Data.Add(new Gate(GateOp.Rx, Theta: th, A: q)); return this; }
-    public QuantumCircuit Rz(double th, int q){ Data.Add(new Gate(GateOp.Rz, Theta: th, A: q)); return this; }
-    public QuantumCircuit Cx(int s, int t)    { Data.Add(new Gate(GateOp.Cx, A: s, B: t)); return this; }
-    public QuantumCircuit Crx(double th, int s, int t) { Data.Add(new Gate(GateOp.Crx, Theta: th, A: s, B: t)); return this; }
-    public QuantumCircuit Swap(int s, int t)  { Data.Add(new Gate(GateOp.Swap, A: s, B: t)); return this; }
+    public QuantumCircuit X(int q)            { _data.Add(new Gate(GateOp.X, A: q)); return this; }
+    public QuantumCircuit H(int q)            { _data.Add(new Gate(GateOp.H, A: q)); return this; }
+    public QuantumCircuit Rx(double th, int q){ _data.Add(new Gate(GateOp.Rx, Theta: th, A: q)); return this; }
+    public QuantumCircuit Rz(double th, int q){ _data.Add(new Gate(GateOp.Rz, Theta: th, A: q)); return this; }
+    public QuantumCircuit Cx(int s, int t)    { _data.Add(new Gate(GateOp.Cx, A: s, B: t)); return this; }
+    public QuantumCircuit Crx(double th, int s, int t) { _data.Add(new Gate(GateOp.Crx, Theta: th, A: s, B: t)); return this; }
+    public QuantumCircuit Swap(int s, int t)  { _data.Add(new Gate(GateOp.Swap, A: s, B: t)); return this; }
 
     // ===== (Slightly) advanced gates as a combo of basic gates =====
     public QuantumCircuit Ry(double th, int q)
@@ -64,7 +65,7 @@ public sealed class QuantumCircuit
     {
         if (b >= Clbits) throw new ArgumentOutOfRangeException(nameof(b), "Classical bit is out of range.");
         if (q >= Qubits) throw new ArgumentOutOfRangeException(nameof(q), "Qubit is out of range.");
-        Data.Add(new Gate(GateOp.M, A: q, B: b));
+        _data.Add(new Gate(GateOp.M, A: q, B: b));
         return this;
     }
 
@@ -82,10 +83,23 @@ public sealed class QuantumCircuit
         if (state.Length != dim)
             throw new ArgumentException($"statevector must have {dim} amplitudes.", nameof(state));
 
-        Data.Clear(); // wipes prior gates.
-        Data.Add(new Gate(GateOp.Init, State: (Complex[])state.Clone()));
+        _data.Clear(); // wipes prior gates.
+        _data.Add(new Gate(GateOp.Init, State: (Complex[])state.Clone()));
         return this;
     }
+    public QuantumCircuit Compose(QuantumCircuit other)
+    {
+        var combined = new QuantumCircuit(Math.Max(Qubits, other.Qubits), Math.Max(Clbits, other.Clbits))
+        { Name = Name, };
+
+        combined._data.AddRange(_data);
+        combined._data.AddRange(other._data);
+
+        return combined;
+    }
+
+    // Rather than the Python's privileged +, C# needs this
+    public static QuantumCircuit operator + (QuantumCircuit a, QuantumCircuit b) => a.Compose(b);
 }
 
 public static class Simulator
