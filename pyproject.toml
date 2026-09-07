@@ -1,0 +1,7 @@
+[project]
+name = "micromoth-td"
+version = "0.1.0"
+description = "MicroMoth Python version that is exposed for TouchDesigner execution"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
