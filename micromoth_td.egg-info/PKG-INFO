@@ -1,6 +1,0 @@
-Metadata-Version: 2.4
-Name: micromoth-td
-Version: 0.1.0
-Summary: MicroMoth Python version that is exposed for TouchDesigner execution
-Requires-Python: >=3.12
-Description-Content-Type: text/markdown

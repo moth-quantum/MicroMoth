@@ -1,7 +1,0 @@
-README.md
-micromoth.py
-pyproject.toml
-micromoth_td.egg-info/PKG-INFO
-micromoth_td.egg-info/SOURCES.txt
-micromoth_td.egg-info/dependency_links.txt
-micromoth_td.egg-info/top_level.txt
