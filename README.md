@@ -13,20 +13,20 @@ MicroMoth also contains ports for other languages, so you can bring the world of
 
 * [Documentation for MicroMoth](https://micromoth.readthedocs.io/en/latest/#)
 
-### Tutorial
-
-* [Tutorial for MicroPython/Python 2/Python 3 version](versions/MicroPython/tutorials/index.ipynb)
-
 ### Installation
 
 Installation guides for the various versions of MicroMoth can be found in the corresponding README files.
 
-* [MicroPython/Python 2/Python 3](versions/Python/README.md)
+* [MicroPython/CircuitPython/Python 3](versions/Python/README.md)
 * [Lua](versions/Lua/README.md)
 * [Arduino](versions/Arduino/MicroMothArduino.md)
 * [C#](versions/Csharp/MicroMothCSharp.md)
 * [JavaScript](versions/JavaScript/micromothJS.md)
 
+
+### Shared tests
+
+The Python, JavaScript and Arduino ports are checked against the same reference cases, generated from the Python template. See [tests/conformance](tests/conformance/README.md).
 
 ### Template Version
 

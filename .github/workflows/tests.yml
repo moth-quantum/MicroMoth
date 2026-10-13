@@ -1,0 +1,81 @@
+name: Tests
+
+# Runs every port's tests, and the shared conformance cases, on each push and pull request.
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    name: Python ${{ matrix.python }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # A spread of the versions that tools embedding Python ship with.
+        python: ['3.9', '3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Stripped copy and conformance cases are up to date
+        if: matrix.python == '3.11'
+        run: |
+          python versions/Python/initialize_micromoth.py --check
+          python tests/conformance/generate.py --check
+      - name: Tests on the stripped copy and on the template
+        run: |
+          python versions/Python/tests.py
+          python versions/Python/tests.py --template
+
+  micropython:
+    name: MicroPython
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the MicroPython Unix port
+        run: |
+          sudo apt-get install --yes --quiet libffi-dev pkg-config
+          git clone --quiet --depth 1 --branch v1.24.1 https://github.com/micropython/micropython.git "$RUNNER_TEMP/micropython"
+          make -C "$RUNNER_TEMP/micropython/mpy-cross" -j4
+          make -C "$RUNNER_TEMP/micropython/ports/unix" submodules
+          make -C "$RUNNER_TEMP/micropython/ports/unix" -j4
+      - name: Tests on the stripped copy and on the template
+        run: |
+          "$RUNNER_TEMP/micropython/ports/unix/build-standard/micropython" versions/Python/tests.py
+          "$RUNNER_TEMP/micropython/ports/unix/build-standard/micropython" versions/Python/tests.py --template
+
+  javascript:
+    name: JavaScript
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: versions/JavaScript/.nvmrc
+      - run: npm test --prefix versions/JavaScript
+
+  arduino:
+    name: Arduino (host build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tests
+        run: sh versions/Arduino/tests/run_host_tests.sh
+      - name: Tests with AddressSanitizer and UBSan
+        run: SANITIZE=1 sh versions/Arduino/tests/run_host_tests.sh
+
+  csharp:
+    name: C#
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - run: dotnet run --project versions/Csharp/Tests -c Release
