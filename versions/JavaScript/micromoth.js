@@ -33,13 +33,13 @@
 
     const GET_MODES = ['statevector', 'probabilities_dict', 'counts', 'memory'];
 
-    // Every gate is stored in the same immutable record shape (the C# `Gate` record).
+    // Every gate is stored in the same record shape (the C# `Gate` record).
     //   single-qubit gates: a = target qubit
     //   two-qubit gates:    a = control (source) qubit, b = target qubit
     //   measure:            a = qubit, b = classical bit
     //   init:               state = { re, im } Float64Arrays
     function gate(op, a = 0, b = 0, theta = 0, state = null) {
-        return Object.freeze({ op, theta, a, b, state });
+        return { op, theta, a, b, state };
     }
 
     function checkAngle(theta) {
@@ -53,18 +53,14 @@
         return typeof v === 'number' && Number.isFinite(v);
     }
 
-    // Hidden circuit state. Symbol keys keep it out of JSON, for...in and Object.keys.
-    // The `#private` syntax is avoided on purpose: the p5.js Editor rewrites every sketch file
-    // with escodegen, which cannot print private class members, and the sketch then fails to start.
-    const QUBITS = Symbol('qubits');
-    const CLBITS = Symbol('clbits');
-    const DATA = Symbol('data');
+    // Circuit state lives in plain properties, as in the Python template. Private class fields are avoided:
+    // the p5.js Editor rewrites sketch files with a tool that cannot handle them, and the sketch fails to start.
 
     // ===== Validation =====
 
     function checkQubit(qc, q, label = 'Qubit') {
-        if (!Number.isInteger(q) || q < 0 || q >= qc[QUBITS]) {
-            throw new RangeError(`${label} index ${q} is out of range for ${qc[QUBITS]} qubit(s).`);
+        if (!Number.isInteger(q) || q < 0 || q >= qc.num_qubits) {
+            throw new RangeError(`${label} index ${q} is out of range for ${qc.num_qubits} qubit(s).`);
         }
         return q;
     }
@@ -76,7 +72,7 @@
     }
 
     function push(qc, g) {
-        qc[DATA].push(g);
+        qc.data.push(g);
         return qc;
     }
 
@@ -88,17 +84,12 @@
             if (!Number.isInteger(m) || m < 0 || m > MAX_CLBITS) {
                 throw new RangeError(`num_clbits must be an integer from 0 to ${MAX_CLBITS}, got ${m}.`);
             }
-            this[QUBITS] = n;
-            this[CLBITS] = m;
-            this[DATA] = [];
+            this.num_qubits = n;
+            this.num_clbits = m;
             this.name = '';
+            this.data = [];
         }
 
-        get num_qubits() { return this[QUBITS]; }
-        get num_clbits() { return this[CLBITS]; }
-
-        // A read-only snapshot of the gate list, so callers cannot corrupt the circuit.
-        get data() { return Object.freeze(this[DATA].slice()); }
         getData() { return this.data; } // Kept for code written against MicroMoth JS 1.0.
 
         // ===== Basic gates =====
@@ -134,18 +125,18 @@
 
         measure(q, b) {
             checkQubit(this, q);
-            if (!Number.isInteger(b) || b < 0 || b >= this[CLBITS]) {
-                throw new RangeError(`Classical bit index ${b} is out of range for ${this[CLBITS]} classical bit(s).`);
+            if (!Number.isInteger(b) || b < 0 || b >= this.num_clbits) {
+                throw new RangeError(`Classical bit index ${b} is out of range for ${this.num_clbits} classical bit(s).`);
             }
             return push(this, gate(Op.M, q, b));
         }
 
         measure_all() {
-            if (this[CLBITS] === 0) this[CLBITS] = this[QUBITS]; // Create the classical register if absent.
-            if (this[CLBITS] < this[QUBITS]) {
-                throw new RangeError(`measure_all needs at least ${this[QUBITS]} classical bits, the circuit has ${this[CLBITS]}.`);
+            if (this.num_clbits === 0) this.num_clbits = this.num_qubits; // Create the classical register if absent.
+            if (this.num_clbits < this.num_qubits) {
+                throw new RangeError(`measure_all needs at least ${this.num_qubits} classical bits, the circuit has ${this.num_clbits}.`);
             }
-            for (let q = 0; q < this[QUBITS]; q++) this.measure(q, q);
+            for (let q = 0; q < this.num_qubits; q++) this.measure(q, q);
             return this;
         }
 
@@ -154,7 +145,7 @@
         // Takes 2^num_qubits amplitudes, each a real number or a [re, im] pair.
         // It also resets the gates that's previously added.
         initialize(state) {
-            const dim = 1 << this[QUBITS];
+            const dim = 1 << this.num_qubits;
             if (!Array.isArray(state) && !ArrayBuffer.isView(state)) {
                 throw new TypeError('initialize expects an array of amplitudes.');
             }
@@ -178,7 +169,7 @@
             }
             if (total === 0) throw new RangeError('Statevector must not be all zeros.');
 
-            this[DATA].length = 0;
+            this.data.length = 0;
             return push(this, gate(Op.INIT, 0, 0, 0, { re, im }));
         }
 
@@ -189,14 +180,14 @@
             if (!(other instanceof QuantumCircuit)) throw new TypeError('compose expects a QuantumCircuit.');
 
             const out = new QuantumCircuit(
-                Math.max(this[QUBITS], other[QUBITS]),
-                Math.max(this[CLBITS], other[CLBITS]),
+                Math.max(this.num_qubits, other.num_qubits),
+                Math.max(this.num_clbits, other.num_clbits),
             );
             out.name = this.name;
-            out[DATA] = this[DATA].concat(other[DATA]);
+            out.data = this.data.concat(other.data);
 
-            const dim = 1 << out[QUBITS];
-            for (const g of out[DATA]) {
+            const dim = 1 << out.num_qubits;
+            for (const g of out.data) {
                 if (g.op === Op.INIT && g.state.re.length !== dim) {
                     throw new RangeError('Cannot compose: an initialize() on fewer qubits would not cover the combined circuit.');
                 }
@@ -439,35 +430,6 @@
     //         'memory'             -> array of `shots` bitstrings, in sampling order
     //   Bitstrings put qubit / classical bit 0 on the right, as in Qiskit.
     function simulate(qc, shots = 1024, get = 'counts', noise_model = [], seed = undefined) {
-        return guardLoopProtection(() => runSimulation(qc, shots, get, noise_model, seed));
-    }
-
-    // The p5.js Editor rewrites sketch files so that any loop running longer than 100 ms is cut short
-    // and reported through window.loopProtect.hit. A cut loop inside the simulator would return a
-    // silently wrong result, so simulate() listens for that report and throws a clear error instead.
-    function guardLoopProtection(run) {
-        const lp = root.loopProtect;
-        if (!lp || typeof lp.hit !== 'function') return run();
-
-        const report = lp.hit;
-        let cut = false;
-        lp.hit = function () {
-            cut = true;
-            return report.apply(this, arguments);
-        };
-        try {
-            const result = run();
-            if (cut) {
-                throw new Error('The p5.js Editor stopped a long loop inside simulate(), so the result would be wrong. '
-                    + 'Add <!-- noprotect --> as the first line of index.html, or turn off loop protection in the Editor settings.');
-            }
-            return result;
-        } finally {
-            lp.hit = report;
-        }
-    }
-
-    function runSimulation(qc, shots, get, noise_model, seed) {
         if (!(qc instanceof QuantumCircuit)) throw new TypeError('simulate expects a QuantumCircuit.');
         if (get === 'probability_dictionary') get = 'probabilities_dict'; // MicroMoth JS 1.0 spelling.
         if (!GET_MODES.includes(get)) {

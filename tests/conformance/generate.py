@@ -7,11 +7,13 @@
 #   tests/conformance/cases.json                    read by the Python and JavaScript tests
 #   versions/Arduino/tests/conformance_cases.inc    the same cases as C++, for the Arduino host tests
 #
-# The cases are generated from a fixed seed, so the output only changes when the cases or the template change.
+# Most expected values come from running the template. The anchor cases instead hold values worked out by
+# hand from the gate definitions, and the generator stops if the template disagrees with any of them. So a bug
+# in the template cannot be written into the expected values just by regenerating them.
 
 import json
+import math
 import os
-import random
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -23,11 +25,6 @@ from micromoth import QuantumCircuit, simulate  # noqa: E402  The commented temp
 JSON_PATH = os.path.join(HERE, 'cases.json')
 ARDUINO_PATH = os.path.join(ROOT, 'versions', 'Arduino', 'tests', 'conformance_cases.inc')
 
-SINGLE = ['x', 'h', 'y', 'z', 't']
-ROTATIONS = ['rx', 'ry', 'rz']
-PAIRS = ['cx', 'swap']
-
-
 def build(qubits, clbits, ops):
     qc = QuantumCircuit(qubits, clbits)
     for op in ops:
@@ -35,30 +32,52 @@ def build(qubits, clbits, ops):
     return qc
 
 
-def random_ops(rng, n, length):
-    ops = []
-    for _ in range(length):
-        kind = rng.random()
-        if n > 1 and kind < 0.35:
-            s, t = rng.sample(range(n), 2)
-            if rng.random() < 0.4:
-                ops.append(['crx', round(rng.uniform(-7, 7), 6), s, t])
-            else:
-                ops.append([rng.choice(PAIRS), s, t])
-        elif kind < 0.65:
-            ops.append([rng.choice(ROTATIONS), round(rng.uniform(-7, 7), 6), rng.randrange(n)])
-        else:
-            ops.append([rng.choice(SINGLE), rng.randrange(n)])
-    return ops
+def anchor_cases():
+    '''Statevectors worked out by hand from the gate definitions, with t = 0.7, c = cos(t/2) and s = sin(t/2).'''
+    r, t = math.sqrt(0.5), 0.7
+    c, s = math.cos(t / 2), math.sin(t / 2)
+    cases = [
+        ('anchor: x turns |0> into |1>', 1, [['x', 0]], [[0, 0], [1, 0]]),
+        ('anchor: h turns |0> into |+>', 1, [['h', 0]], [[r, 0], [r, 0]]),
+        ('anchor: rx(t)|0> = c|0> - is|1>', 1, [['rx', t, 0]], [[c, 0], [0, -s]]),
+        ('anchor: ry(t)|0> = c|0> + s|1>', 1, [['ry', t, 0]], [[c, 0], [s, 0]]),
+        ('anchor: rz(t)|+> = (c - is)|0>/sqrt2 + (c + is)|1>/sqrt2', 1, [['h', 0], ['rz', t, 0]], [[r * c, -r * s], [r * c, r * s]]),
+        ('anchor: Bell state', 2, [['h', 0], ['cx', 0, 1]], [[r, 0], [0, 0], [0, 0], [r, 0]]),
+        ('anchor: GHZ state', 3, [['h', 0], ['cx', 0, 1], ['cx', 1, 2]], [[r, 0]] + [[0, 0]] * 6 + [[r, 0]]),
+        ('anchor: crx(t) with control 0 below target 1', 2, [['x', 0], ['crx', t, 0, 1]], [[0, 0], [c, 0], [0, 0], [0, -s]]),
+        ('anchor: crx(t) with control 1 above target 0', 2, [['x', 1], ['crx', t, 1, 0]], [[0, 0], [0, 0], [c, 0], [0, -s]]),
+        ('anchor: swap moves qubit 0 to qubit 1', 2, [['x', 0], ['swap', 0, 1]], [[0, 0], [0, 0], [1, 0], [0, 0]]),
+    ]
+    return [{'name': name, 'qubits': n, 'clbits': 0, 'ops': ops, 'expected': want} for name, n, ops, want in cases]
 
 
-def statevector_cases(rng):
+def noise_anchor_cases():
+    '''Probabilities worked out by hand: each qubit's reading flips independently with its own probability.'''
+    return [
+        {'name': 'anchor: noise 0.2 on |0>', 'qubits': 1, 'clbits': 0, 'ops': [], 'noise': [0.2], 'expected': [0.8, 0.2]},
+        {'name': 'anchor: noise 0.2 and 0.1 on |q1 q0> = |01>', 'qubits': 2, 'clbits': 0, 'ops': [['x', 0]],
+         'noise': [0.2, 0.1], 'expected': [0.2 * 0.9, 0.8 * 0.9, 0.2 * 0.1, 0.8 * 0.1]},
+    ]
+
+
+def check_anchors(statevector_anchors, probability_anchors):
+    '''Stops if the template disagrees with a hand-derived value. Fix the template, not the anchor.
+    The tolerance matches the ports' tests, so the template's 11-digit 1/sqrt(2) is accepted.'''
+    for case in statevector_anchors:
+        got = simulate(build(case['qubits'], 0, case['ops']), get='statevector')
+        if not all(abs(g[0] - w[0]) < 1e-9 and abs(g[1] - w[1]) < 1e-9 for g, w in zip(got, case['expected'])):
+            sys.exit('The template disagrees with the hand-derived case "' + case['name'] + '". Fix the template, not the anchor.')
+    for case in probability_anchors:
+        p = simulate(build(case['qubits'], 0, case['ops']), get='probabilities_dict', noise_model=case['noise'])
+        n = case['qubits']
+        got = [p[('{0:0' + str(n) + 'b}').format(j)] for j in range(2 ** n)]
+        if not all(abs(g - w) < 1e-9 for g, w in zip(got, case['expected'])):
+            sys.exit('The template disagrees with the hand-derived case "' + case['name'] + '". Fix the template, not the anchor.')
+
+
+def statevector_cases():
     fixed = [
-        ('x on qubit 1 of 2', 2, [['x', 1]]),
-        ('h on qubit 0 of 2', 2, [['h', 0]]),
-        ('rx(pi/4)', 1, [['rx', 0.7853981633974483, 0]]),
         ('rz phase on |+>', 1, [['h', 0], ['rz', 1.1, 0]]),
-        ('ry(pi/8)', 1, [['ry', 0.39269908169872414, 0]]),
         ('y on |0>', 1, [['y', 0]]),
         ('z and t on |+>', 1, [['h', 0], ['z', 0], ['t', 0]]),
         ('cx with control below target', 3, [['h', 0], ['cx', 0, 2]]),
@@ -67,30 +86,24 @@ def statevector_cases(rng):
         ('swap of qubits 0 and 2', 3, [['x', 0], ['h', 1], ['swap', 0, 2]]),
         ('every gate', 3, [['h', 0], ['rx', 0.7, 1], ['rz', 1.1, 0], ['ry', 0.3, 2], ['y', 1], ['t', 0], ['z', 2],
                            ['cx', 2, 0], ['crx', 0.9, 2, 1], ['swap', 0, 2], ['crx', 0.4, 0, 2], ['cx', 1, 2], ['h', 2]]),
+        # Qubits 1 and 3 of 5 leave bits below, between and above them, so every level of the two-qubit loops runs twice.
+        ('two-qubit gates using every loop level', 5, [['h', 0], ['h', 1], ['h', 2], ['h', 3], ['h', 4], ['crx', 0.9, 3, 1],
+                                                     ['rz', 0.5, 1], ['cx', 1, 3], ['ry', 0.3, 3], ['swap', 3, 1], ['crx', 0.4, 1, 3]]),
         ('initialize complex then gates', 2, [['initialize', [[0.5, 0], [0, 0.5], [-0.5, 0], [0, -0.5]]],
                                               ['h', 1], ['cx', 1, 0]]),
     ]
     cases = [{'name': name, 'qubits': n, 'clbits': 0, 'ops': ops} for name, n, ops in fixed]
-    for i in range(40):
-        n = rng.randint(1, 4)
-        cases.append({'name': 'random circuit ' + str(i + 1), 'qubits': n, 'clbits': 0,
-                      'ops': random_ops(rng, n, rng.randint(1, 15))})
     for case in cases:
         case['expected'] = simulate(build(case['qubits'], 0, case['ops']), get='statevector')
     return cases
 
 
-def probability_cases(rng):
+def probability_cases():
     cases = [
-        {'name': 'noise 0.1 on both qubits of |00>', 'qubits': 2, 'clbits': 0, 'ops': [], 'noise': [0.1, 0.1]},
-        {'name': 'noise only on qubit 0', 'qubits': 2, 'clbits': 0, 'ops': [['x', 0]], 'noise': [0.2, 0.0]},
         {'name': 'Bell state with noise', 'qubits': 2, 'clbits': 0, 'ops': [['h', 0], ['cx', 0, 1]], 'noise': [0.05, 0.15]},
+        {'name': 'rotations with noise', 'qubits': 3, 'clbits': 0, 'ops': [['ry', 0.8, 0], ['rx', 1.3, 2], ['crx', 0.6, 0, 1]],
+         'noise': [0.1, 0.0, 0.25]},
     ]
-    for i in range(10):
-        n = rng.randint(1, 4)
-        cases.append({'name': 'random noisy circuit ' + str(i + 1), 'qubits': n, 'clbits': 0,
-                      'ops': random_ops(rng, n, rng.randint(1, 12)),
-                      'noise': [round(rng.uniform(0, 0.3), 4) for _ in range(n)]})
     for case in cases:
         p = simulate(build(case['qubits'], 0, case['ops']), get='probabilities_dict', noise_model=case['noise'])
         n = case['qubits']
@@ -148,12 +161,13 @@ def error_cases():
 
 
 def make_cases():
-    rng = random.Random(2026)
+    anchors, noise_anchors = anchor_cases(), noise_anchor_cases()
+    check_anchors(anchors, noise_anchors)
     return {
         'about': 'Cases every MicroMoth port must agree on. Generated by tests/conformance/generate.py: do not edit.',
         'tolerance': {'double': 1e-9, 'float': 1e-5},
-        'statevector': statevector_cases(rng),
-        'probabilities': probability_cases(rng),
+        'statevector': anchors + statevector_cases(),
+        'probabilities': noise_anchors + probability_cases(),
         'counts': counts_cases(),
         'errors': error_cases(),
     }

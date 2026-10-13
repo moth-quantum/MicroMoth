@@ -168,20 +168,9 @@ class QuantumCircuit {
     free(_init);
   }
 
-  // A circuit owns its memory, so it cannot be copied by accident. compose() makes a new one.
+  // A circuit owns its memory, so it cannot be copied by accident.
   QuantumCircuit(const QuantumCircuit&) = delete;
   QuantumCircuit& operator=(const QuantumCircuit&) = delete;
-
-  QuantumCircuit(QuantumCircuit&& other) noexcept { take(other); }
-
-  QuantumCircuit& operator=(QuantumCircuit&& other) noexcept {
-    if (this != &other) {
-      free(_gates);
-      free(_init);
-      take(other);
-    }
-    return *this;
-  }
 
   // ===== Inspection =====
 
@@ -284,30 +273,6 @@ class QuantumCircuit {
   template <size_t N>
   QuantumCircuit& initialize(const float (&state)[N]) { return initialize(state, N); }
 
-  // ===== Composition =====
-
-  // A new circuit: this circuit's gates followed by the other's. Neither operand changes.
-  QuantumCircuit compose(const QuantumCircuit& other) const {
-    QuantumCircuit out(_qubits > other._qubits ? _qubits : other._qubits,
-                       _clbits > other._clbits ? _clbits : other._clbits);
-    out.name = name;
-    if (_error) out.set_error(_error);
-    if (other._error) out.set_error(other._error);
-
-    // Every initialize() replaces the whole state, so only the last one's amplitudes matter.
-    const QuantumCircuit* source = other._init ? &other : (_init ? this : nullptr);
-    if (source) {
-      if (source->_qubits != out._qubits) {
-        out.set_error(F("cannot compose an initialize() on fewer qubits"));
-      } else if (out.reserve_init()) {
-        memcpy(out._init, source->_init, ((size_t)1 << out._qubits) * sizeof(ComplexNumber));
-      }
-    }
-    for (int i = 0; i < _size; i++) out.push(_gates[i]);
-    for (int i = 0; i < other._size; i++) out.push(other._gates[i]);
-    return out;
-  }
-
  private:
   uint8_t _qubits = 1;
   uint8_t _clbits = 0;
@@ -316,20 +281,6 @@ class QuantumCircuit {
   Gate* _gates = nullptr;
   ComplexNumber* _init = nullptr;
   const __FlashStringHelper* _error = nullptr;
-
-  void take(QuantumCircuit& other) {
-    name = other.name;
-    _qubits = other._qubits;
-    _clbits = other._clbits;
-    _size = other._size;
-    _capacity = other._capacity;
-    _gates = other._gates;
-    _init = other._init;
-    _error = other._error;
-    other._size = other._capacity = 0;
-    other._gates = nullptr;
-    other._init = nullptr;
-  }
 
   QuantumCircuit& set_error(const __FlashStringHelper* why) {
     if (!_error) _error = why;  // Keep the first problem: later ones are often caused by it.
@@ -396,10 +347,6 @@ class QuantumCircuit {
     return push(Gate{Op::init, 0, 0, 0.0f});
   }
 };
-
-inline QuantumCircuit operator+(const QuantumCircuit& a, const QuantumCircuit& b) {
-  return a.compose(b);
-}
 
 namespace micromoth_detail {
 

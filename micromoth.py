@@ -40,15 +40,10 @@ _GET_MODES = ('statevector', 'probabilities_dict', 'counts', 'memory')
 # Every check raises an error at the call that caused it, so mistakes are reported where they are made.
 # They use `raise` rather than `assert`, because Python removes asserts when run with the -O flag.
 
-def _is_text(value):
-  return isinstance(value, str) or isinstance(value, bytes)
-
 def _is_sequence(value):
   '''True for lists, tuples and array-like objects. MicroPython may not report __len__ through hasattr.'''
   if isinstance(value, list) or isinstance(value, tuple):
     return True
-  if _is_text(value):
-    return False
   try:
     len(value)
   except TypeError:
@@ -56,43 +51,39 @@ def _is_sequence(value):
   return True
 
 def _whole(value, what):
-  '''Returns `value` as an int if it is a whole number, and raises an error otherwise.'''
-  if _is_text(value):
-    raise TypeError(what + ' must be an integer, got ' + repr(value))
+  '''Returns `value` as an int if it is a whole number.'''
   try:
     i = int(value)
   except (TypeError, ValueError):
-    raise TypeError(what + ' must be an integer, got ' + repr(value))
-  if i != value:
-    raise TypeError(what + ' must be an integer, got ' + repr(value))
+    i = None
+  if i is None or i != value:
+    raise TypeError(what + ' must be an integer')
   return i
 
 def _index(value, size, what):
   '''Returns `value` as an int if it is a valid index for a register of the given size.'''
   i = _whole(value, what)
   if i < 0 or i >= size:
-    raise ValueError(what + ' ' + str(i) + ' is out of range for ' + str(size) + ' available')
+    raise ValueError(what + ' ' + str(i) + ' out of range')
   return i
 
 def _real(value, what):
   '''Returns `value` as a finite float.'''
-  if _is_text(value):
-    raise TypeError(what + ' must be a number, got ' + repr(value))
   try:
     x = float(value)
   except (TypeError, ValueError):
-    raise TypeError(what + ' must be a number, got ' + repr(value))
+    raise TypeError(what + ' must be a number')
   if x - x != 0: # True for inf and nan only.
-    raise ValueError(what + ' must be finite, got ' + repr(value))
+    raise ValueError(what + ' must be finite')
   return x
 
 def _amplitude(e):
   '''Converts one amplitude into the [real, imaginary] pair used by the simulator.'''
   if _is_sequence(e): # A pair such as [0.6, 0.8] or (0.6, 0.8), or an array-like row.
     if len(e) != 2:
-      raise ValueError('an amplitude given as a pair must have 2 parts, got ' + repr(e))
+      raise ValueError('amplitude pairs need 2 parts')
     return [_real(e[0], 'amplitude'), _real(e[1], 'amplitude')]
-  if hasattr(e, 'imag') and not _is_text(e): # Any number with .real and .imag, including complex ones.
+  if hasattr(e, 'imag'): # Any number with .real and .imag, including complex ones.
     return [_real(e.real, 'amplitude'), _real(e.imag, 'amplitude')]
   return [_real(e, 'amplitude'), 0.0] # MicroPython ints and floats have no .imag.
 
@@ -117,9 +108,9 @@ class QuantumCircuit:
     self.num_qubits=_whole(n, 'num_qubits')
     self.num_clbits=_whole(m, 'num_clbits')
     if self.num_qubits < 1:
-      raise ValueError('num_qubits must be at least 1, got ' + str(self.num_qubits))
+      raise ValueError('num_qubits must be at least 1')
     if self.num_clbits < 0:
-      raise ValueError('num_clbits must not be negative, got ' + str(self.num_clbits))
+      raise ValueError('num_clbits must not be negative')
     # It is possible to set a name for a circuit
     self.name = ''
     # Like Qiskit, QuantumCircuit objects in MicroQiskit have a `data` attribute, which is essentially a list of gates.
@@ -129,26 +120,26 @@ class QuantumCircuit:
   def __add__(self,self2):
     '''Allows QuantumCircuit objects to be added, as in Qiskit.'''
     if not isinstance(self2, QuantumCircuit):
-      raise TypeError('only a QuantumCircuit can be added to a QuantumCircuit')
+      raise TypeError('can only add a QuantumCircuit')
     self3=QuantumCircuit(max(self.num_qubits,self2.num_qubits),max(self.num_clbits,self2.num_clbits))
     self3.data=self.data+self2.data
     self3.name = self.name
     # An initialize() on fewer qubits would not cover the combined circuit.
     for gate in self3.data:
       if gate[0]=='init' and len(gate[1])!=2**self3.num_qubits:
-        raise ValueError('cannot add a circuit whose initialize() has fewer qubits')
+        raise ValueError('initialize() has too few qubits')
     return self3
 
   def initialize(self,k):
     '''Initializes the qubits in a given state.'''
     # Each amplitude can be a real number, a complex number, or a [real, imaginary] pair.
     if not _is_sequence(k):
-      raise TypeError('initialize needs a list of amplitudes')
+      raise TypeError('initialize needs a list')
     if len(k) != 2**self.num_qubits:
-      raise ValueError('initialize needs ' + str(2**self.num_qubits) + ' amplitudes, got ' + str(len(k)))
+      raise ValueError('initialize needs ' + str(2**self.num_qubits) + ' amplitudes')
     state = [_amplitude(e) for e in k] # A private copy, so later changes to `k` cannot affect the circuit.
     if not any(e[0] or e[1] for e in state):
-      raise ValueError('the statevector must not be all zeros')
+      raise ValueError('statevector is all zeros')
     self.data[:] = [] # Clear existing gates.
     self.data.append(('init',state)) # Add the instruction to initialize, including the required state.
 
@@ -173,7 +164,7 @@ class QuantumCircuit:
     s = _index(s,self.num_qubits,'qubit')
     t = _index(t,self.num_qubits,'qubit')
     if s == t:
-      raise ValueError('source and target qubits must differ, both are ' + str(s))
+      raise ValueError('source and target must differ')
     return s, t
 
   def cx(self,s,t):
@@ -203,7 +194,7 @@ class QuantumCircuit:
         self.num_clbits = self.num_qubits
       # Check before adding anything, so a failed call leaves the circuit unchanged.
       if self.num_clbits < self.num_qubits:
-        raise ValueError('measure_all needs at least ' + str(self.num_qubits) + ' output bits, the circuit has ' + str(self.num_clbits))
+        raise ValueError('measure_all needs ' + str(self.num_qubits) + ' output bits')
       for q in range(self.num_qubits):
         self.measure(q,q)
 
@@ -245,13 +236,13 @@ def _noise(noise_model, n):
     if len(noise_model) == 0:
       return None
     if len(noise_model) != n:
-      raise ValueError('noise_model needs one probability per qubit (' + str(n) + '), got ' + str(len(noise_model)))
+      raise ValueError('noise_model needs ' + str(n) + ' probabilities')
     probs = [_real(p, 'noise probability') for p in noise_model]
   else: # A single probability applies to every qubit.
     probs = [_real(noise_model, 'noise probability')] * n
   for p in probs:
     if p < 0 or p > 1:
-      raise ValueError('noise probabilities must be from 0 to 1, got ' + repr(p))
+      raise ValueError('noise probabilities must be from 0 to 1')
   return probs
 
 def _check_measured_last(qc):
@@ -262,11 +253,11 @@ def _check_measured_last(qc):
       measured.add(gate[1])
     elif gate[0] == 'init':
       if measured:
-        raise ValueError('initialize() cannot follow a measurement')
+        raise ValueError('initialize() after a measurement')
     else:
       for q in _gate_qubits(gate):
         if q in measured:
-          raise ValueError("gate '" + gate[0] + "' acts on qubit " + str(q) + ' after it was measured. Measure each qubit after its last gate.')
+          raise ValueError(gate[0] + ' on qubit ' + str(q) + ' after measuring it')
 
 def _random_source(seed):
   '''Returns a function giving random floats from 0 to 1. The same seed always gives the same samples.'''
@@ -286,16 +277,16 @@ def simulate(qc,shots=1024,get='counts',noise_model=[],seed=None):
   if not isinstance(qc, QuantumCircuit):
     raise TypeError('simulate needs a QuantumCircuit')
   if get not in _GET_MODES:
-    raise ValueError('get must be one of ' + ', '.join(_GET_MODES) + ", got '" + str(get) + "'")
+    raise ValueError('get must be one of ' + ', '.join(_GET_MODES))
 
   # Check everything before simulating, so mistakes are reported quickly.
   noise = None if get=='statevector' else _noise(noise_model, qc.num_qubits)
   if get in ('counts', 'memory'):
     shots = _whole(shots, 'shots')
     if shots < 0:
-      raise ValueError('shots must not be negative, got ' + str(shots))
+      raise ValueError('shots must not be negative')
     if qc.num_clbits == 0:
-      raise ValueError("'" + get + "' needs output bits. Use measure() or measure_all() first.")
+      raise ValueError(get + ' needs output bits')
     _check_measured_last(qc)
     rand = _random_source(seed)
 

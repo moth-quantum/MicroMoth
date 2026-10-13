@@ -41,7 +41,6 @@ An outcome's number is its bitstring read in binary, with classical bit 0 on the
 | `measure(q, b)` | Reads qubit `q` into classical bit `b` |
 | `measure_all()` | Measures qubit `i` into bit `i`, creating the bits if there are none |
 | `initialize(state)` | Starts from `state` and discards earlier gates |
-| `compose(other)`, `a + b` | Returns a new circuit: this one followed by `other` |
 
 `initialize` takes an array of 2^num_qubits amplitudes. Use `ComplexNumber` values such as `{0.6, 0.8}`, or plain `float` values for real amplitudes. With a plain array the length is checked for you.
 
