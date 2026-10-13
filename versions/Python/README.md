@@ -14,7 +14,7 @@ python3 versions/Python/initialize_micromoth.py
 
 Downloading a single file is all that is needed, so the word 'installation' is perhaps overkill. All you need to do is take the [micromoth.py](micromoth.py) file, and place it somewhere that it can be found by Python when importing. The easiest option is simply to put it in the same folder as any Python scripts that will use it.
 
-It also works inside tools that embed Python 3, such as Blender, and accepts NumPy numbers and arrays where it takes numbers or amplitudes.
+It also works inside tools that embed Python 3, such as Blender. MicroMoth imports no other packages, but it accepts any value that behaves like a number or a list, so values from libraries such as NumPy work too.
 
 ### Usage
 

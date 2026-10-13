@@ -55,7 +55,9 @@ that is out of range, a gate whose source and target are the same qubit, or a st
         Initializes a circuit with the state described by the statevector ``ket``,
         and removes any gates added before it. ``ket`` needs one amplitude per basis
         state. Each amplitude can be a real number, a complex number, or a
-        ``[real, imaginary]`` pair. NumPy arrays work too.
+        ``[real, imaginary]`` pair. Number-like and array-like values from other
+        libraries, such as NumPy, also work: MicroMoth reads them through Python's
+        standard number and sequence rules, and never imports those libraries.
     
     .. classmethod:: x(qubit)
     

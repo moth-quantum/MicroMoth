@@ -4,7 +4,7 @@
 #   python3 tests/conformance/generate.py --check   fails if either file is out of date (used by CI)
 #
 # Outputs:
-#   tests/conformance/cases.json                    read by the Python, JavaScript and C# tests
+#   tests/conformance/cases.json                    read by the Python and JavaScript tests
 #   versions/Arduino/tests/conformance_cases.inc    the same cases as C++, for the Arduino host tests
 #
 # The cases are generated from a fixed seed, so the output only changes when the cases or the template change.

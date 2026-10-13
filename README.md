@@ -26,7 +26,7 @@ Installation guides for the various versions of MicroMoth can be found in the co
 
 ### Shared tests
 
-Every port is checked against the same reference cases, generated from the Python template. See [tests/conformance](tests/conformance/README.md).
+The Python, JavaScript and Arduino ports are checked against the same reference cases, generated from the Python template. See [tests/conformance](tests/conformance/README.md).
 
 ### Template Version
 

@@ -32,10 +32,6 @@ jobs:
         run: |
           python versions/Python/tests.py
           python versions/Python/tests.py --template
-      - name: Tests with NumPy inputs
-        run: |
-          python -m pip install --quiet numpy
-          python versions/Python/tests.py
 
   micropython:
     name: MicroPython

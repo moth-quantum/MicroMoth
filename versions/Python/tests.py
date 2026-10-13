@@ -76,6 +76,41 @@ def has_complex():
         return False
 
 
+class NumberLike:
+    '''Behaves like a number from another library, such as a NumPy scalar: it converts with float() and int(),
+    and has .real and .imag. It lets the tests cover such values without depending on any package.'''
+    def __init__(self, re, im=0.0):
+        self.real = re
+        self.imag = im
+
+    def __float__(self):
+        return float(self.real)
+
+    def __int__(self):
+        return int(self.real)
+
+    def __eq__(self, other):
+        return self.real == other and self.imag == 0
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+
+class ArrayLike:
+    '''Behaves like an array from another library: it has a length and can be indexed, but is not a list or tuple.'''
+    def __init__(self, items):
+        self._items = list(items)
+
+    def __len__(self):
+        return len(self._items)
+
+    def __getitem__(self, i):
+        return self._items[i]
+
+    def __iter__(self):
+        return iter(self._items)
+
+
 def main():
     print('Gates')
     c = counts(circuit(1, 1, ('x', 0), ('measure_all',)), 1000)
@@ -196,18 +231,20 @@ def main():
     exported = sorted(k for k in names if not k.startswith('__'))
     check('Star import gives QuantumCircuit, simulate and pi only', exported == ['QuantumCircuit', 'pi', 'simulate'])
 
-    try:
-        import numpy as np
-    except ImportError:
-        np = None
-    if np is not None:
-        print('NumPy')
-        check('NumPy complex array for initialize',
-              same_state(statevector(circuit(1, 0, ('initialize', np.array([0.6, 0.8j])))), [[0.6, 0], [0, 0.8]]))
-        p = simulate(circuit(1), get='probabilities_dict', noise_model=np.float64(0.25))
-        check('NumPy float noise model', approx(p['1'], 0.25))
-        check('NumPy integer qubit indices',
-              counts(circuit(np.int64(2), np.int64(2), ('x', np.int64(1)), ('measure_all',)), 10) == {'10': 10})
+    print('Number-like values from other libraries')
+    amplitudes = ArrayLike([NumberLike(0.6), NumberLike(0, 0.8)])
+    check('Array of complex number-likes for initialize',
+          same_state(statevector(circuit(1, 0, ('initialize', amplitudes))), [[0.6, 0], [0, 0.8]]))
+    pairs = ArrayLike([ArrayLike([0.6, 0]), ArrayLike([0, 0.8])])
+    check('Array of [re, im] array-likes for initialize',
+          same_state(statevector(circuit(1, 0, ('initialize', pairs))), [[0.6, 0], [0, 0.8]]))
+    p = simulate(circuit(1), get='probabilities_dict', noise_model=NumberLike(0.25))
+    check('Number-like noise model', approx(p['1'], 0.25))
+    p = simulate(circuit(2), get='probabilities_dict', noise_model=ArrayLike([0.25, 0]))
+    check('Array-like noise model', approx(p['01'], 0.25))
+    check('Number-like qubit indices',
+          counts(circuit(NumberLike(2), NumberLike(2), ('x', NumberLike(1)), ('measure_all',)), 10) == {'10': 10})
+    check('Number-like index that is not whole raises TypeError', raises(lambda: circuit(2, 0, ('x', NumberLike(0.5))), TypeError))
 
     conformance()
 

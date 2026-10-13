@@ -44,7 +44,7 @@ def _is_text(value):
   return isinstance(value, str) or isinstance(value, bytes)
 
 def _is_sequence(value):
-  '''True for lists, tuples and NumPy arrays. MicroPython may not report __len__ through hasattr.'''
+  '''True for lists, tuples and array-like objects. MicroPython may not report __len__ through hasattr.'''
   if isinstance(value, list) or isinstance(value, tuple):
     return True
   if _is_text(value):
@@ -88,11 +88,11 @@ def _real(value, what):
 
 def _amplitude(e):
   '''Converts one amplitude into the [real, imaginary] pair used by the simulator.'''
-  if _is_sequence(e): # A pair such as [0.6, 0.8] or (0.6, 0.8), or a NumPy row.
+  if _is_sequence(e): # A pair such as [0.6, 0.8] or (0.6, 0.8), or an array-like row.
     if len(e) != 2:
       raise ValueError('an amplitude given as a pair must have 2 parts, got ' + repr(e))
     return [_real(e[0], 'amplitude'), _real(e[1], 'amplitude')]
-  if hasattr(e, 'imag') and not _is_text(e): # Python and NumPy numbers, including complex ones.
+  if hasattr(e, 'imag') and not _is_text(e): # Any number with .real and .imag, including complex ones.
     return [_real(e.real, 'amplitude'), _real(e.imag, 'amplitude')]
   return [_real(e, 'amplitude'), 0.0] # MicroPython ints and floats have no .imag.
 
