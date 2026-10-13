@@ -8,7 +8,7 @@
 // copyright notice, and modified files need to carry a notice indicating
 // that they have been altered from the originals.
 
-// (C) Copyright @kaleb-hutchy 2020.
+// c.f. Old MicroQiskit JavaScript version: (C) Copyright @kaleb-hutchy 2020.
 //
 // This code is licensed under the Apache License, Version 2.0. You may
 // obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -17,16 +17,6 @@
 // Any modifications or derivative works of this code must retain this
 // copyright notice, and modified files need to carry a notice indicating
 // that they have been altered from the originals.
-
-// MicroMoth for JavaScript.
-//
-// Behaviour follows the commented Python template (micromoth.py at the repo root).
-// Structure follows the C# port (versions/Csharp/MicroMoth/MicroMoth.cs):
-// one immutable gate record, validated gate methods, a statevector held in typed
-// arrays, a clbit -> qubit map, integer outcomes and a seedable random generator.
-//
-// The same file works as a plain browser <script> (including p5.js global mode),
-// with Node's require(), and with Node's ESM `import { ... } from`.
 
 (function (root) {
     'use strict';
@@ -63,11 +53,34 @@
         return typeof v === 'number' && Number.isFinite(v);
     }
 
-    class QuantumCircuit {
-        #qubits;
-        #clbits;
-        #data = [];
+    // Hidden circuit state. Symbol keys keep it out of JSON, for...in and Object.keys.
+    // The `#private` syntax is avoided on purpose: the p5.js Editor rewrites every sketch file
+    // with escodegen, which cannot print private class members, and the sketch then fails to start.
+    const QUBITS = Symbol('qubits');
+    const CLBITS = Symbol('clbits');
+    const DATA = Symbol('data');
 
+    // ===== Validation =====
+
+    function checkQubit(qc, q, label = 'Qubit') {
+        if (!Number.isInteger(q) || q < 0 || q >= qc[QUBITS]) {
+            throw new RangeError(`${label} index ${q} is out of range for ${qc[QUBITS]} qubit(s).`);
+        }
+        return q;
+    }
+
+    function checkPair(qc, s, t) {
+        checkQubit(qc, s, 'Control qubit');
+        checkQubit(qc, t, 'Target qubit');
+        if (s === t) throw new RangeError(`Control and target qubits must differ, both are ${s}.`);
+    }
+
+    function push(qc, g) {
+        qc[DATA].push(g);
+        return qc;
+    }
+
+    class QuantumCircuit {
         constructor(n, m = 0) {
             if (!Number.isInteger(n) || n < 1 || n > MAX_QUBITS) {
                 throw new RangeError(`num_qubits must be an integer from 1 to ${MAX_QUBITS}, got ${n}.`);
@@ -75,93 +88,73 @@
             if (!Number.isInteger(m) || m < 0 || m > MAX_CLBITS) {
                 throw new RangeError(`num_clbits must be an integer from 0 to ${MAX_CLBITS}, got ${m}.`);
             }
-            this.#qubits = n;
-            this.#clbits = m;
+            this[QUBITS] = n;
+            this[CLBITS] = m;
+            this[DATA] = [];
             this.name = '';
         }
 
-        get num_qubits() { return this.#qubits; }
-        get num_clbits() { return this.#clbits; }
+        get num_qubits() { return this[QUBITS]; }
+        get num_clbits() { return this[CLBITS]; }
 
         // A read-only snapshot of the gate list, so callers cannot corrupt the circuit.
-        get data() { return Object.freeze(this.#data.slice()); }
+        get data() { return Object.freeze(this[DATA].slice()); }
         getData() { return this.data; } // Kept for code written against MicroMoth JS 1.0.
 
-        // ===== Validation =====
+        // ===== Basic gates =====
 
-        #qubit(q, label = 'Qubit') {
-            if (!Number.isInteger(q) || q < 0 || q >= this.#qubits) {
-                throw new RangeError(`${label} index ${q} is out of range for ${this.#qubits} qubit(s).`);
-            }
-            return q;
-        }
+        x(q)               { return push(this, gate(Op.X, checkQubit(this, q))); }
+        h(q)               { return push(this, gate(Op.H, checkQubit(this, q))); }
+        rx(theta, q)       { return push(this, gate(Op.RX, checkQubit(this, q), 0, checkAngle(theta))); }
+        rz(theta, q)       { return push(this, gate(Op.RZ, checkQubit(this, q), 0, checkAngle(theta))); }
+        cx(s, t)           { checkPair(this, s, t); return push(this, gate(Op.CX, s, t)); }
+        crx(theta, s, t)   { checkPair(this, s, t); return push(this, gate(Op.CRX, s, t, checkAngle(theta))); }
+        swap(s, t)         { checkPair(this, s, t); return push(this, gate(Op.SWAP, s, t)); }
 
-        #pair(s, t) {
-            this.#qubit(s, 'Control qubit');
-            this.#qubit(t, 'Target qubit');
-            if (s === t) throw new RangeError(`Control and target qubits must differ, both are ${s}.`);
-        }
-
-        #push(g) {
-            this.#data.push(g);
-            return this;
-        }
-
-        // ===== Basic gates: the only ones the simulator knows =====
-
-        x(q)               { return this.#push(gate(Op.X, this.#qubit(q))); }
-        h(q)               { return this.#push(gate(Op.H, this.#qubit(q))); }
-        rx(theta, q)       { return this.#push(gate(Op.RX, this.#qubit(q), 0, checkAngle(theta))); }
-        rz(theta, q)       { return this.#push(gate(Op.RZ, this.#qubit(q), 0, checkAngle(theta))); }
-        cx(s, t)           { this.#pair(s, t); return this.#push(gate(Op.CX, s, t)); }
-        crx(theta, s, t)   { this.#pair(s, t); return this.#push(gate(Op.CRX, s, t, checkAngle(theta))); }
-        swap(s, t)         { this.#pair(s, t); return this.#push(gate(Op.SWAP, s, t)); }
-
-        // ===== Gates built from the basic ones =====
-        // Arguments are checked before the first push, so a bad call never leaves half a gate behind.
+        // ===== Gates that can be built from the basic gates' combo =====
 
         ry(theta, q) {
             checkAngle(theta);
-            this.#qubit(q);
+            checkQubit(this, q);
             return this.rx(Math.PI / 2, q).rz(theta, q).rx(-Math.PI / 2, q);
         }
 
         z(q) { return this.rz(Math.PI, q); }
         t(q) { return this.rz(Math.PI / 4, q); }
-        y(q) { this.#qubit(q); return this.rz(Math.PI, q).x(q); }
+        y(q) { checkQubit(this, q); return this.rz(Math.PI, q).x(q); }
 
-        // Controlled rz, using h·rx·h = rz on the target. Not in the Python template; kept from MicroMoth JS 1.0.
+        // imported from MicroQiskit JS.
         crz(theta, s, t) {
             checkAngle(theta);
-            this.#pair(s, t);
+            checkPair(this, s, t);
             return this.h(t).crx(theta, s, t).h(t);
         }
 
         // ===== Measurement =====
 
         measure(q, b) {
-            this.#qubit(q);
-            if (!Number.isInteger(b) || b < 0 || b >= this.#clbits) {
-                throw new RangeError(`Classical bit index ${b} is out of range for ${this.#clbits} classical bit(s).`);
+            checkQubit(this, q);
+            if (!Number.isInteger(b) || b < 0 || b >= this[CLBITS]) {
+                throw new RangeError(`Classical bit index ${b} is out of range for ${this[CLBITS]} classical bit(s).`);
             }
-            return this.#push(gate(Op.M, q, b));
+            return push(this, gate(Op.M, q, b));
         }
 
         measure_all() {
-            if (this.#clbits === 0) this.#clbits = this.#qubits; // Create the classical register if absent.
-            if (this.#clbits < this.#qubits) {
-                throw new RangeError(`measure_all needs at least ${this.#qubits} classical bits, the circuit has ${this.#clbits}.`);
+            if (this[CLBITS] === 0) this[CLBITS] = this[QUBITS]; // Create the classical register if absent.
+            if (this[CLBITS] < this[QUBITS]) {
+                throw new RangeError(`measure_all needs at least ${this[QUBITS]} classical bits, the circuit has ${this[CLBITS]}.`);
             }
-            for (let q = 0; q < this.#qubits; q++) this.measure(q, q);
+            for (let q = 0; q < this[QUBITS]; q++) this.measure(q, q);
             return this;
         }
 
         // ===== Initialisation =====
 
         // Takes 2^num_qubits amplitudes, each a real number or a [re, im] pair.
-        // Like Python and C#, this discards any gates added before it.
+        // It also resets the gates that's previously added.
         initialize(state) {
-            const dim = 1 << this.#qubits;
+            const dim = 1 << this[QUBITS];
             if (!Array.isArray(state) && !ArrayBuffer.isView(state)) {
                 throw new TypeError('initialize expects an array of amplitudes.');
             }
@@ -185,37 +178,35 @@
             }
             if (total === 0) throw new RangeError('Statevector must not be all zeros.');
 
-            this.#data.length = 0;
-            return this.#push(gate(Op.INIT, 0, 0, 0, { re, im }));
+            this[DATA].length = 0;
+            return push(this, gate(Op.INIT, 0, 0, 0, { re, im }));
         }
 
         // ===== Composition =====
 
-        // Returns a new circuit: this circuit's gates followed by the other's. Neither operand changes.
+        // Returns a new circuit
         compose(other) {
             if (!(other instanceof QuantumCircuit)) throw new TypeError('compose expects a QuantumCircuit.');
 
             const out = new QuantumCircuit(
-                Math.max(this.#qubits, other.#qubits),
-                Math.max(this.#clbits, other.#clbits),
+                Math.max(this[QUBITS], other[QUBITS]),
+                Math.max(this[CLBITS], other[CLBITS]),
             );
             out.name = this.name;
-            out.#data = this.#data.concat(other.#data);
+            out[DATA] = this[DATA].concat(other[DATA]);
 
-            const dim = 1 << out.#qubits;
-            for (const g of out.#data) {
+            const dim = 1 << out[QUBITS];
+            for (const g of out[DATA]) {
                 if (g.op === Op.INIT && g.state.re.length !== dim) {
                     throw new RangeError('Cannot compose: an initialize() on fewer qubits would not cover the combined circuit.');
                 }
             }
             return out;
         }
-
-        // The Python template's `+`.
         add(other) { return this.compose(other); }
     }
 
-    // ===== Maths helpers. Each updates a pair of amplitudes, indices i and j, in place. =====
+    // ===== Maths helpers =====
 
     // x: swap the two amplitudes.
     function exchange(re, im, i, j) {
@@ -316,7 +307,7 @@
 
     // ===== Probabilities and noise =====
 
-    // Accepts a single probability or one per qubit, as in the Python template.
+    // Accepts a single probability or one per qubit.
     function normaliseNoise(noise_model, n) {
         if (noise_model === undefined || noise_model === null) return null;
         const list = typeof noise_model === 'number' ? new Array(n).fill(noise_model) : noise_model;
@@ -360,8 +351,6 @@
     }
 
     // ===== Sampling =====
-
-    // Measurements are deferred to the end, so no gate may touch a qubit after it is measured.
     function checkMeasuredLast(data, n) {
         const measured = new Array(n).fill(false);
         let anyMeasured = false;
@@ -388,7 +377,7 @@
         }
     }
 
-    // Seedable generator (mulberry32). The same seed always gives the same samples.
+    // from MicroQiskit: Seedable generator - The same seed always gives the same samples.
     function makeRng(seed) {
         if (seed === undefined || seed === null) return Math.random;
         if (!Number.isInteger(seed)) throw new TypeError(`seed must be an integer, got ${seed}.`);
@@ -450,6 +439,35 @@
     //         'memory'             -> array of `shots` bitstrings, in sampling order
     //   Bitstrings put qubit / classical bit 0 on the right, as in Qiskit.
     function simulate(qc, shots = 1024, get = 'counts', noise_model = [], seed = undefined) {
+        return guardLoopProtection(() => runSimulation(qc, shots, get, noise_model, seed));
+    }
+
+    // The p5.js Editor rewrites sketch files so that any loop running longer than 100 ms is cut short
+    // and reported through window.loopProtect.hit. A cut loop inside the simulator would return a
+    // silently wrong result, so simulate() listens for that report and throws a clear error instead.
+    function guardLoopProtection(run) {
+        const lp = root.loopProtect;
+        if (!lp || typeof lp.hit !== 'function') return run();
+
+        const report = lp.hit;
+        let cut = false;
+        lp.hit = function () {
+            cut = true;
+            return report.apply(this, arguments);
+        };
+        try {
+            const result = run();
+            if (cut) {
+                throw new Error('The p5.js Editor stopped a long loop inside simulate(), so the result would be wrong. '
+                    + 'Add <!-- noprotect --> as the first line of index.html, or turn off loop protection in the Editor settings.');
+            }
+            return result;
+        } finally {
+            lp.hit = report;
+        }
+    }
+
+    function runSimulation(qc, shots, get, noise_model, seed) {
         if (!(qc instanceof QuantumCircuit)) throw new TypeError('simulate expects a QuantumCircuit.');
         if (get === 'probability_dictionary') get = 'probabilities_dict'; // MicroMoth JS 1.0 spelling.
         if (!GET_MODES.includes(get)) {
@@ -531,10 +549,10 @@
     if (typeof module === 'object' && module !== null && module.exports) {
         module.exports = { QuantumCircuit, simulate, kron, norm };
     } else {
-        // Browser globals, which p5.js global mode relies on.
+        // Browser globals, which p5.js global mode relies on. Only names p5.js does not use are
+        // global: p5.js has its own norm(), so the helpers live on the MicroMoth namespace.
         root.QuantumCircuit = QuantumCircuit;
         root.simulate = simulate;
-        root.kron = kron;
-        root.norm = norm;
+        root.MicroMoth = Object.freeze({ QuantumCircuit, simulate, kron, norm });
     }
 })(typeof globalThis !== 'undefined' ? globalThis : this);
