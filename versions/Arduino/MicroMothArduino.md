@@ -2,7 +2,7 @@
 
 A single header, [MicroMothArduino.h](MicroMothArduino.h), with no dependencies beyond the Arduino core. It works on AVR boards such as the Uno and Mega, and on 32-bit boards such as the ESP32 and Raspberry Pi Pico.
 
-Its behaviour follows the Python template ([micromoth.py](../../micromoth.py)), and its structure follows the [C# port](../Csharp/MicroMoth/MicroMoth.cs).
+Its behaviour follows the Python original ([micromoth.py](../../micromoth.py)), and its structure follows the [C# version](../Csharp/MicroMoth/MicroMoth.cs). This update happened two years after its' original is created, to match the modern AVR programming practice and emulation behaviours. 
 
 ## Setup
 
@@ -96,16 +96,3 @@ sh versions/Arduino/tests/run_host_tests.sh
 ```
 
 Add `SANITIZE=1` in front to also check for memory errors.
-
-## Changes from the previous version
-
-- Every gate checks its arguments. Bad indices used to corrupt memory silently.
-- Results go into your own arrays through `simulate_counts`, `simulate_memory`, `simulate_probabilities` and `simulate_statevector`. Before, counts could only be printed.
-- `simulate` is a plain function. Replace `qc.simulate(qc, 64, "counts")` with `simulate(qc, 64, "counts")`.
-- `initialize` takes amplitudes, as in Python. `initialise(k, s)` with a basis-state index is gone. Use `x` gates to start from a basis state.
-- `"memory"` and `"probabilities_dict"` work, along with `compose`, `+` and `micromoth_seed`.
-- The memory check that only worked on AVR boards, and could stop the board, is gone. Running out of memory is now an error you can handle.
-- The header can be included from several `.cpp` files, and works on ESP32, SAMD and RP2040 boards as well as AVR.
-- Rotation gates compute their sine and cosine once per gate instead of once per amplitude pair. Trigonometry is slow on boards without a floating-point unit, so rotations there should be several times faster. This has not yet been measured on a board.
-- Sampling uses 8 bytes per amplitude instead of 12, and picks each shot by binary search.
-- `num_qubits` and `num_clbits` are now methods: `qc.num_qubits()`.
