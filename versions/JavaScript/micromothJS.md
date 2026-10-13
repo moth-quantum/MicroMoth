@@ -8,11 +8,27 @@ Its behaviour follows the Python template ([micromoth.py](../../micromoth.py)), 
 
 ### Browser and p5.js
 
-Copy `micromoth.js` next to your page and load it before your sketch. It defines the globals `QuantumCircuit`, `simulate`, `kron` and `norm`.
+Copy `micromoth.js` next to your page and load it before your sketch. It defines the globals `QuantumCircuit` and `simulate`, plus a `MicroMoth` object that also holds the helpers `kron` and `norm`. The helpers are not global, because p5.js has its own `norm()`.
 
 ```html
 <script src="micromoth.js"></script>
 <script src="sketch.js"></script>
+```
+
+### p5.js Editor
+
+The quickest way is to load the file from the jsDelivr CDN. In `index.html`, add this line after the p5.js line and before `sketch.js`:
+
+```html
+<script src="https://cdn.jsdelivr.net/gh/moth-quantum/MicroMoth@main/versions/JavaScript/micromoth.js"></script>
+```
+
+To keep a copy inside the sketch instead, add a file named `micromoth.js` to it. Logged-in users can upload the file. Anyone can use "Add File" and paste in the contents. Then add `<script src="micromoth.js"></script>` to `index.html` in the same place.
+
+A copy inside the sketch is rewritten by the Editor to stop loops that run longer than 100 ms. Small circuits are unaffected. Around 18 qubits the rewrite makes MicroMoth about ten times slower, and around 20 qubits it can stop a loop inside the simulator. MicroMoth then throws an error rather than returning a wrong result. Files loaded from the CDN are not rewritten. To turn the rewrite off for a sketch, make this the first line of `index.html`:
+
+```html
+<!-- noprotect -->
 ```
 
 ### Node
@@ -70,7 +86,7 @@ The circuit also exposes `num_qubits`, `num_clbits`, a writable `name`, and `dat
 - **`seed`** is an optional integer. The same seed always gives the same samples.
 - **Measurements happen at the end.** For counts and memory, a gate on a qubit after it was measured throws an error.
 
-`kron(a, b)` and `norm(ket)` combine and normalise `[re, im]` statevectors, which is handy for `initialize`.
+`kron(a, b)` and `norm(ket)` combine and normalise `[re, im]` statevectors, which is handy for `initialize`. In the browser, call them as `MicroMoth.kron` and `MicroMoth.norm`.
 
 ### Limits and errors
 
@@ -92,3 +108,5 @@ npm test
 - `counts` and `memory` need classical bits. Use `measure` or `measure_all`.
 - `getData()` now returns a read-only snapshot.
 - The internal helpers `rotate`, `superposition` and `phaseturn` are no longer exported.
+- In the browser, `kron` and `norm` moved from globals to the `MicroMoth` object, so they no longer replace p5.js's `norm()`.
+- The file no longer uses `#private` class syntax, which stopped sketches from starting in the p5.js Editor.

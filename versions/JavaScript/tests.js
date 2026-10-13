@@ -294,6 +294,30 @@ async function main() {
         const ctx = vm.createContext({});
         vm.runInContext(fs.readFileSync(path.join(__dirname, 'micromoth.js'), 'utf8'), ctx);
         check('Browser <script>: globals for p5.js', typeof ctx.QuantumCircuit === 'function' && typeof ctx.simulate === 'function');
+        check("Browser <script>: no global norm or kron to clash with p5.js",
+            !('norm' in ctx) && !('kron' in ctx) && typeof ctx.MicroMoth.norm === 'function');
+    }
+
+    // The p5.js Editor rewrites sketch files with escodegen, which cannot print `#private` class members.
+    {
+        const src = fs.readFileSync(path.join(__dirname, 'micromoth.js'), 'utf8')
+            .replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, '')                 // comments
+            .replace(/`(?:\\[\s\S]|[^`\\])*`|'(?:\\.|[^'\\])*'|"(?:\\.|[^"\\])*"/g, '""'); // strings
+        check('p5.js Editor: no #private class syntax', !/#[A-Za-z_$]/.test(src));
+    }
+
+    // In the p5.js Editor, a loop cut short by loop protection must surface as an error, not a wrong result.
+    {
+        let reported = 0;
+        globalThis.loopProtect = { hit() { reported++; } };
+        const noise = [0, 0];
+        Object.defineProperty(noise, 1, { get() { globalThis.loopProtect.hit(1); return 0; } }); // a "cut" mid-run
+        const cutThrows = throws(() => simulate(new QuantumCircuit(2), 0, 'probabilities_dict', noise));
+        const normalRuns = !throws(() => simulate(new QuantumCircuit(2).h(0), 0, 'probabilities_dict'));
+        const restored = globalThis.loopProtect.hit.name === 'hit';
+        delete globalThis.loopProtect;
+        check('p5.js Editor: a cut loop throws instead of returning a wrong result', cutThrows && reported > 0);
+        check('p5.js Editor: uncut runs work and the hook is restored', normalRuns && restored);
     }
 
     console.log(failures === 0 ? '\nAll smoke tests passed.' : `\n${failures} test(s) FAILED.`);
