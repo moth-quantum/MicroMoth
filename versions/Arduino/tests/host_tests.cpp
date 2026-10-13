@@ -29,6 +29,30 @@ static bool same_state(const ComplexNumber* a, const ComplexNumber* b, int n, fl
   return true;
 }
 
+static bool same_floats(const float* a, const float* b, int n, float tol) {
+  for (int i = 0; i < n; i++) {
+    if (!approx(a[i], b[i], tol)) return false;
+  }
+  return true;
+}
+
+// The shared cases in tests/conformance, generated as C++ because there is no JSON parser here.
+static void run_conformance() {
+  int agreed = 0, total = 0;
+#define CONFORMANCE_TOLERANCE 1e-5f
+#define CONFORM(name, ok)                                   \
+  do {                                                      \
+    total++;                                                \
+    if (ok) agreed++;                                       \
+    else check("Conformance: " name, false);                \
+  } while (0)
+#include "conformance_cases.inc"
+#undef CONFORM
+  char summary[80];
+  snprintf(summary, sizeof summary, "Conformance: %d of %d shared cases agree", agreed, total);
+  check(summary, agreed == total);
+}
+
 // Number of distinct outcomes seen, and whether every one is in the allowed list.
 static bool only(const uint16_t* counts, int outcomes, const int* allowed, int n_allowed, int* distinct = nullptr) {
   int seen = 0;
@@ -379,6 +403,9 @@ int main() {
     check("simulate rejects an unknown get mode with a message",
           !simulate(qc, 1, "bogus", nullptr, out) && out.text.find("MicroMoth error: get must be") == 0);
   }
+
+  printf("Conformance (tests/conformance/cases.json)\n");
+  run_conformance();
 
   printf("Linking\n");
   check("Header included from two .cpp files links and runs", second_unit_bell_count() == 100);

@@ -1,11 +1,16 @@
 MicroMoth Library Reference
 *****************************
 
-A minimal quantum SDK for Python. It is compatible with Python 2 and Python 3, as well as MicroPython and CircuitPython.
+A minimal quantum SDK for Python. It runs on Python 3, MicroPython and CircuitPython. Python 2 is no longer supported.
+
+``from micromoth import *`` gives ``QuantumCircuit``, ``simulate`` and ``pi``.
+
+Invalid arguments raise ``ValueError`` or ``TypeError`` at the call that caused them, for example a qubit index
+that is out of range, a gate whose source and target are the same qubit, or a statevector of the wrong length.
 
 .. module:: micromoth
 
-.. function:: simulate(qc,shots=1024,get='counts',noise_model=[]):
+.. function:: simulate(qc,shots=1024,get='counts',noise_model=[],seed=None):
 
     Runs the quantum circuit ``qc``. Results are given from multiple runs, the
     number of which is specified by ``shots``. The type of output is specified
@@ -25,7 +30,16 @@ A minimal quantum SDK for Python. It is compatible with Python 2 and Python 3, a
     A limited capacity for adding noise is implemented in MicroMoth. Specifically,
     bit flip errors can be added at the very end of the circuit to all qubits. To
     apply this, supply a list of the desired error probabilities for each qubit as
-    the ``noise_model`` argument.
+    the ``noise_model`` argument, or a single probability for every qubit.
+
+    Measurements are applied at the end of the circuit. So for ``'counts'`` and
+    ``'memory'``, a gate that acts on a qubit after it has been measured raises
+    ``ValueError``, as does a circuit without output bits.
+
+    ``seed`` is an optional integer. The same seed always gives the same samples.
+    On Python 3 it uses a private random generator, so other code's random numbers
+    are unaffected. MicroPython has no private generators, so there it seeds the
+    shared ``random`` module.
         
 
 .. class:: QuantumCircuit(num_qubits, num_clbits=0)
@@ -38,7 +52,10 @@ A minimal quantum SDK for Python. It is compatible with Python 2 and Python 3, a
 
     .. classmethod:: initialize(ket)
     
-        Initializes a circuit with the state described by the statevector ``ket``.
+        Initializes a circuit with the state described by the statevector ``ket``,
+        and removes any gates added before it. ``ket`` needs one amplitude per basis
+        state. Each amplitude can be a real number, a complex number, or a
+        ``[real, imaginary]`` pair. NumPy arrays work too.
     
     .. classmethod:: x(qubit)
     
@@ -65,13 +82,13 @@ A minimal quantum SDK for Python. It is compatible with Python 2 and Python 3, a
 
     .. classmethod:: t(qubit)
     
-        Adds aa ``t`` gate to the circuit on the given qubit.
+        Adds a ``t`` gate to the circuit on the given qubit.
     
     .. classmethod:: cx(control,target)
     
         Adds a ``cx`` gate to the circuit for the given control and target qubits.
 
-    .. classmethod:: crx(control,target)
+    .. classmethod:: crx(theta,control,target)
     
         Adds a ``crx`` gate to the circuit for the given control and target qubits.
         The angle is given by ``theta``.

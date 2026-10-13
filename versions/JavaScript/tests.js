@@ -283,6 +283,36 @@ async function main() {
     check('counts without classical bits throws', throws(() => counts(new QuantumCircuit(1).h(0), 10)));
     check('Unknown get mode throws', throws(() => simulate(new QuantumCircuit(1), 1, 'bogus'), RangeError));
 
+    console.log('Conformance (tests/conformance/cases.json)');
+    {
+        const file = path.join(__dirname, '..', '..', 'tests', 'conformance', 'cases.json');
+        if (!fs.existsSync(file)) {
+            console.log('  cases.json not found, skipped');
+        } else {
+            const cases = JSON.parse(fs.readFileSync(file, 'utf8'));
+            const tol = cases.tolerance.double;
+            const build = (c) => {
+                const qc = new QuantumCircuit(c.qubits, c.clbits);
+                for (const [name, ...args] of c.ops) qc[name](...args);
+                return qc;
+            };
+            const bits = (j, n) => j.toString(2).padStart(n, '0');
+            let agreed = 0, total = 0;
+            const tally = (name, ok) => {
+                total++;
+                if (ok) agreed++; else check(`Conformance: ${name}`, false);
+            };
+            for (const c of cases.statevector) tally(c.name, sameStatevector(statevector(build(c)), c.expected, tol));
+            for (const c of cases.probabilities) {
+                const p = simulate(build(c), 0, 'probabilities_dict', c.noise);
+                tally(c.name, c.expected.every((want, j) => approx(p[bits(j, c.qubits)], want, tol)));
+            }
+            for (const c of cases.counts) tally(c.name, JSON.stringify(counts(build(c), c.shots)) === JSON.stringify(c.expected));
+            for (const c of cases.errors) tally(`rejects ${c.name}`, throws(() => simulate(build(c), 4, c.get, [], 1)));
+            check(`Conformance: ${agreed} of ${total} shared cases agree`, agreed === total);
+        }
+    }
+
     console.log('Loading');
 
     {
