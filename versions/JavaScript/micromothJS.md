@@ -81,14 +81,3 @@ A circuit holds 1 to 20 qubits and 0 to 30 classical bits. Invalid arguments thr
 ```bash
 npm test
 ```
-
-## Changes from 1.0
-
-- Gate methods validate their arguments.
-- `initialize` accepts real amplitudes, checks the length, and clears earlier gates.
-- `compose`, `add` and the `seed` argument are new.
-- `crz` is now simulated. It was silently ignored before.
-- `probabilities_dict` is the output name, matching Python. The 1.0 spelling `probability_dictionary` still works.
-- `counts` and `memory` need classical bits. Use `measure` or `measure_all`.
-- `getData()` now returns a read-only snapshot.
-- The internal helpers `rotate`, `superposition` and `phaseturn` are no longer exported.
