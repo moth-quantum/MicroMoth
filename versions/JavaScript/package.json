@@ -1,13 +1,20 @@
 {
-  "name": "micromoth-JS",
-  "version": "1.0.0",
-  "description": "",
+  "name": "micromoth-js",
+  "version": "1.2.0",
+  "description": "The smallest and most feature-poor quantum computing framework, for JavaScript in the browser and Node.",
   "main": "micromoth.js",
   "scripts": {
     "test": "node tests.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "module"
+  "keywords": ["quantum", "quantum computing", "micromoth", "qiskit"],
+  "author": "Moth Quantum",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/moth-quantum/MicroMoth.git",
+    "directory": "versions/JavaScript"
+  },
+  "engines": {
+    "node": ">=18"
+  }
 }

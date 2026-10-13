@@ -25,6 +25,7 @@ Installation guides for the various versions of MicroMoth can be found in the co
 * [Lua](versions/Lua/README.md)
 * [Arduino](versions/Arduino/MicroMothArduino.md)
 * [C#](versions/Csharp/MicroMothCSharp.md)
+* [JavaScript](versions/JavaScript/micromothJS.md)
 
 
 ### Template Version
