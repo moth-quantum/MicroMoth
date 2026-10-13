@@ -25,7 +25,7 @@ The quickest way is to load the file from the jsDelivr CDN. In `index.html`, add
 
 To keep a copy inside the sketch instead, add a file named `micromoth.js` to it. Logged-in users can upload the file. Anyone can use "Add File" and paste in the contents. Then add `<script src="micromoth.js"></script>` to `index.html` in the same place.
 
-A copy inside the sketch is rewritten by the Editor to stop loops that run longer than 100 ms. Small circuits are unaffected. Around 18 qubits the rewrite makes MicroMoth about ten times slower, and around 20 qubits it can stop a loop inside the simulator. MicroMoth then throws an error rather than returning a wrong result. Files loaded from the CDN are not rewritten. To turn the rewrite off for a sketch, make this the first line of `index.html`:
+A copy inside the sketch is rewritten by the Editor to stop loops that run longer than 100 ms. Small circuits are unaffected. Around 18 qubits the rewrite makes MicroMoth about ten times slower. Around 20 qubits it can stop a loop inside the simulator, and the result is then wrong. Files loaded from the CDN are not rewritten, so use the CDN, or turn the rewrite off, for large circuits. To turn the rewrite off for a sketch, make this the first line of `index.html`:
 
 ```html
 <!-- noprotect -->
@@ -71,7 +71,7 @@ Bitstrings put qubit 0, or classical bit 0, on the right, as in Qiskit.
 
 `initialize` takes 2^num_qubits amplitudes. Each amplitude is a real number or a `[re, im]` pair.
 
-The circuit also exposes `num_qubits`, `num_clbits`, a writable `name`, and `data`. `data` is a read-only snapshot of the gate list.
+The circuit also has `num_qubits`, `num_clbits`, a `name`, and `data`, the list of gates, as in the Python version.
 
 ### `simulate(qc, shots = 1024, get = 'counts', noise_model = [], seed)`
 

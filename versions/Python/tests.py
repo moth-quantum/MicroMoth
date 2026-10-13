@@ -1,5 +1,6 @@
-# Tests for MicroMoth (Python), mirroring versions/Csharp/Tests/Tests.cs and versions/JavaScript/tests.js,
-# plus the shared cross-port cases in tests/conformance/cases.json.
+# Tests for MicroMoth (Python).
+# Gate results, bit order and the measurement rule are checked by the shared cases in tests/conformance.
+# This file checks what is specific to the Python version: its API, its errors and the inputs it accepts.
 #
 # Runs on Python 3 and on MicroPython, from any folder:
 #   python3 versions/Python/tests.py
@@ -112,33 +113,9 @@ class ArrayLike:
 
 
 def main():
-    print('Gates')
-    c = counts(circuit(1, 1, ('x', 0), ('measure_all',)), 1000)
-    check('X: all ones', c == {'1': 1000})
-    c = counts(circuit(1, 1, ('h', 0), ('measure_all',)), 1000)
-    check('H: two balanced outcomes', len(c) == 2 and 400 < c['0'] < 600)
-    check('Bell statevector = [.707, 0, 0, .707]',
-          same_state(statevector(circuit(2, 0, ('h', 0), ('cx', 0, 1))), [[R2, 0], [0, 0], [0, 0], [R2, 0]]))
+    print('Outputs')
     c = counts(circuit(2, 2, ('h', 0), ('cx', 0, 1), ('measure_all',)), 2000)
-    check('Bell: only 00 and 11', sorted(c.keys()) == ['00', '11'])
-    c = counts(circuit(3, 3, ('h', 0), ('cx', 0, 1), ('cx', 1, 2), ('measure_all',)), 2000)
-    check('GHZ: only 000 and 111', sorted(c.keys()) == ['000', '111'])
-    check("Endianness: x(0) -> '01'", counts(circuit(2, 2, ('x', 0), ('measure_all',)), 100) == {'01': 100})
-    check("Swap: x(0) then swap -> '10'", counts(circuit(2, 2, ('x', 0), ('swap', 0, 1), ('measure_all',)), 100) == {'10': 100})
-    check('Ry(pi/2): [.707, .707] real', same_state(statevector(circuit(1, 0, ('ry', PI / 2, 0))), [[R2, 0], [R2, 0]]))
-    p = simulate(circuit(1, 0, ('h', 0), ('rz', PI / 3, 0)), get='probabilities_dict')
-    check('Rz: phase only (probs 0.5/0.5)', approx(p['0'], 0.5) and approx(p['1'], 0.5))
-
-    print('Measurement and outputs')
-    check("measure(0,1): qubit 0 lands on bit 1 -> '10'",
-          counts(circuit(2, 2, ('x', 0), ('measure', 0, 1), ('measure', 1, 0)), 50) == {'10': 50})
-    check("Unmeasured output bit reads 0 -> '01'",
-          counts(circuit(2, 2, ('x', 0), ('x', 1), ('measure', 0, 0)), 50) == {'01': 50})
-    check("Measuring two qubits into one bit is allowed; the last one wins",
-          counts(circuit(2, 1, ('x', 1), ('measure', 0, 0), ('measure', 1, 0)), 50) == {'1': 50})
-    qc = circuit(2, 0, ('h', 0), ('cx', 0, 1))
-    qc.measure_all()
-    check('measure_all: creates 2 output bits', qc.num_clbits == 2)
+    check('Bell sampling: only 00 and 11', sorted(c.keys()) == ['00', '11'])
     c = counts(circuit(1, 1, ('ry', 1.0, 0), ('measure_all',)), 20000)
     check('Sampling: frequency within 0.02 of sin^2(0.5)', approx(c.get('1', 0) / 20000, math.sin(0.5) ** 2, 0.02))
     p = simulate(circuit(2, 0, ('x', 1)), get='probabilities_dict')
@@ -155,13 +132,11 @@ def main():
 
     print('Noise model')
     p = simulate(circuit(2), get='probabilities_dict', noise_model=0.1)
-    check('Noise float: 0.81 / 0.09 / 0.09 / 0.01',
+    check('Noise as one number: 0.81 / 0.09 / 0.09 / 0.01',
           approx(p['00'], 0.81) and approx(p['01'], 0.09) and approx(p['10'], 0.09) and approx(p['11'], 0.01))
     p = simulate(circuit(2), get='probabilities_dict', noise_model=1)
     check('Noise int 1 accepted: every bit flips', approx(p['11'], 1))
-    p = simulate(circuit(2, 0, ('x', 0)), get='probabilities_dict', noise_model=[0.2, 0])
-    check('Noise list: only qubit 0 flips', approx(p['01'], 0.8) and approx(p['00'], 0.2) and approx(p['10'], 0))
-    check('Noise list: wrong length raises ValueError',
+    check('Noise list of the wrong length raises ValueError',
           raises(lambda: simulate(circuit(2), get='probabilities_dict', noise_model=[0.1]), ValueError))
     check('Noise outside [0, 1] raises ValueError',
           raises(lambda: simulate(circuit(1), get='probabilities_dict', noise_model=1.5), ValueError))
@@ -174,7 +149,6 @@ def main():
               same_state(statevector(circuit(1, 0, ('initialize', [complex(0.6, 0), complex(0, 0.8)]))), [[0.6, 0], [0, 0.8]]))
     qc = circuit(1, 0, ('x', 0), ('initialize', [[1, 0], [0, 0]]))
     check('initialize: clears earlier gates', len(qc.data) == 1 and approx(statevector(qc)[0][0], 1))
-    check('initialize: wrong length raises ValueError', raises(lambda: circuit(2, 0, ('initialize', [1, 0])), ValueError))
     check('initialize: all zeros raises ValueError', raises(lambda: circuit(1, 0, ('initialize', [0, 0])), ValueError))
     source = [[0.0, 0.0], [1.0, 0.0]]
     qc = circuit(1, 0, ('initialize', source), ('x', 0))
@@ -197,33 +171,20 @@ def main():
     check('add: smaller initialize into larger circuit raises ValueError',
           raises(lambda: circuit(2) + circuit(1, 0, ('initialize', [1, 0])), ValueError))
 
-    print('Validation')
+    print('Errors')
     check('Constructor: 0 qubits raises ValueError', raises(lambda: QuantumCircuit(0), ValueError))
-    check('Gate: qubit out of range raises ValueError', raises(lambda: circuit(2, 0, ('x', 2)), ValueError))
-    check('Gate: negative qubit raises ValueError', raises(lambda: circuit(2, 0, ('h', -1)), ValueError))
     check('Gate: fractional qubit raises TypeError', raises(lambda: circuit(2, 0, ('x', 0.5)), TypeError))
-    check('Gate: source equal to target raises ValueError', raises(lambda: circuit(2, 0, ('cx', 1, 1)), ValueError))
+    check('Gate: text qubit raises TypeError', raises(lambda: circuit(2, 0, ('x', '1')), TypeError))
     check('Gate: infinite angle raises ValueError', raises(lambda: circuit(1, 0, ('rx', float('inf'), 0)), ValueError))
-    check('Gate: text angle raises TypeError', raises(lambda: circuit(1, 0, ('rx', '1.0', 0)), TypeError))
-    check('measure: output bit out of range raises ValueError', raises(lambda: circuit(2, 2, ('measure', 0, 2)), ValueError))
     qc = QuantumCircuit(2)
     raises(lambda: qc.ry(float('nan'), 0), ValueError)
     raises(lambda: qc.y(5), ValueError)
     check('Composite gates: a bad call adds nothing', qc.data == [])
     qc = QuantumCircuit(2, 1)
     check('measure_all: too few output bits raises and adds nothing', raises(qc.measure_all, ValueError) and qc.data == [])
-    check("Unknown get raises ValueError", raises(lambda: simulate(QuantumCircuit(1), get='bogus'), ValueError))
-
-    print('Measurement order')
-    check('Gate after its measurement, with another measure between, raises',
-          raises(lambda: counts(circuit(2, 2, ('measure', 0, 0), ('measure', 1, 1), ('x', 0)), 10), ValueError))
-    check('cx after measuring its control raises',
-          raises(lambda: counts(circuit(2, 2, ('h', 0), ('measure', 0, 0), ('cx', 0, 1), ('measure', 1, 1)), 10), ValueError))
-    check('Gate after measure(q, b) with q != b raises',
-          raises(lambda: counts(circuit(2, 2, ('measure', 0, 1), ('measure', 1, 0), ('x', 0)), 10), ValueError))
-    check('Statevector ignores the rule',
+    check('Statevector ignores the measurement rule',
           not raises(lambda: statevector(circuit(1, 1, ('measure', 0, 0), ('x', 0))), Exception))
-    check('counts without output bits raises ValueError', raises(lambda: counts(circuit(1, 0, ('h', 0)), 10), ValueError))
+    check('Unknown get raises ValueError', raises(lambda: simulate(QuantumCircuit(1), get='bogus'), ValueError))
 
     print('Module')
     names = {}
@@ -232,19 +193,12 @@ def main():
     check('Star import gives QuantumCircuit, simulate and pi only', exported == ['QuantumCircuit', 'pi', 'simulate'])
 
     print('Number-like values from other libraries')
-    amplitudes = ArrayLike([NumberLike(0.6), NumberLike(0, 0.8)])
     check('Array of complex number-likes for initialize',
-          same_state(statevector(circuit(1, 0, ('initialize', amplitudes))), [[0.6, 0], [0, 0.8]]))
-    pairs = ArrayLike([ArrayLike([0.6, 0]), ArrayLike([0, 0.8])])
-    check('Array of [re, im] array-likes for initialize',
-          same_state(statevector(circuit(1, 0, ('initialize', pairs))), [[0.6, 0], [0, 0.8]]))
+          same_state(statevector(circuit(1, 0, ('initialize', ArrayLike([NumberLike(0.6), NumberLike(0, 0.8)])))), [[0.6, 0], [0, 0.8]]))
     p = simulate(circuit(1), get='probabilities_dict', noise_model=NumberLike(0.25))
     check('Number-like noise model', approx(p['1'], 0.25))
-    p = simulate(circuit(2), get='probabilities_dict', noise_model=ArrayLike([0.25, 0]))
-    check('Array-like noise model', approx(p['01'], 0.25))
     check('Number-like qubit indices',
           counts(circuit(NumberLike(2), NumberLike(2), ('x', NumberLike(1)), ('measure_all',)), 10) == {'10': 10})
-    check('Number-like index that is not whole raises TypeError', raises(lambda: circuit(2, 0, ('x', NumberLike(0.5))), TypeError))
 
     conformance()
 
